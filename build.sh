@@ -2,6 +2,7 @@
 
 buildLambda() {
     mvn -f lambda-core clean install -DskipTests
+    mvn -f lambda-model clean install -DskipTests
     mvn -f lambda-generator clean install -DskipTests
 }
 

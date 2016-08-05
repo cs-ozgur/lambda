@@ -11,10 +11,9 @@
     <artifactId>lambda-generator</artifactId>
 
     <properties>
-        <javapoet.version>1.2.0</javapoet.version>
+        <javapoet.version>1.7.0</javapoet.version>
         <maven-invoker.version>2.2</maven-invoker.version>
         <rs-api.version>2.0.1</rs-api.version>
-        <spring.version>4.1.7.RELEASE</spring.version>
     </properties>
 
     <dependencies>
@@ -37,16 +36,6 @@
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>${rs-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup</groupId>

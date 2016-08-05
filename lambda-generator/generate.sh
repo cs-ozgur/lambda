@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 deleteExistingExport() {
-    rm -f /data/export/api.jar
+    rm -rf /data/export/api.jar
 }
 
 generateApiJar() {

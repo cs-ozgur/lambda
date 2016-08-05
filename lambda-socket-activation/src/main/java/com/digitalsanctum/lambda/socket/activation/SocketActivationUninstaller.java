@@ -2,7 +2,11 @@ package com.digitalsanctum.lambda.socket.activation;
 
 import com.digitalsanctum.lambda.socket.activation.model.SocketActivationConfiguration;
 import com.google.common.base.Joiner;
-import com.spotify.docker.client.*;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.exceptions.ContainerNotFoundException;
+import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.AuthConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

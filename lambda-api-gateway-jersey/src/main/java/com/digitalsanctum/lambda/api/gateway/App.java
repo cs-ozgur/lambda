@@ -12,8 +12,12 @@ public class App {
     public static void main(String[] args) throws Exception {
 
         String lambdaHandler = System.getenv("LAMBDA_HANDLER");
-        int lambdaTimeout = Integer.parseInt(System.getenv("LAMBDA_TIMEOUT"));
+        int lambdaTimeout = System.getenv("LAMBDA_TIMEOUT") == null ? 60 : Integer.parseInt(System.getenv("LAMBDA_TIMEOUT"));
 
+        if (lambdaHandler == null) {
+            System.err.println("You must set LAMBDA_HANDLER");
+        }
+        
         System.out.println("LAMBDA_HANDLER=" + lambdaHandler);
         System.out.println("LAMBDA_TIMEOUT=" + lambdaTimeout);
 

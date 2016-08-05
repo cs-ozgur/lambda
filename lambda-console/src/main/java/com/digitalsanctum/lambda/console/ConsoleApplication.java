@@ -2,8 +2,8 @@ package com.digitalsanctum.lambda.console;
 
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.AuthConfig;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
@@ -92,7 +92,7 @@ public class ConsoleApplication {
     }
 
     private void execInContainer(final String containerId, final String... command)
-            throws DockerException, InterruptedException, IOException {
+        throws InterruptedException, IOException, DockerException {
         final String execId = docker.execCreate(containerId, command,
                 DockerClient.ExecCreateParam.attachStdout(),
                 DockerClient.ExecCreateParam.attachStderr());

@@ -42,11 +42,11 @@ public class LocalConsoleApp {
         // dynamically adds lambda jar to classloader
         addLambdaJar(new File(lambdaConfig.getLambdaJarPath()));
 
-        new Generator(lambdaConfig)
-                .installLambdaJar()
-                .generateJerseyResource()
-                .compileAndPackageGateway()
-                .exportGatewayJar();
+        Generator gen = new Generator(lambdaConfig);
+        gen.installLambdaJar();
+        gen.generateJerseyResource();
+        gen.compileAndPackageGateway();
+        gen.exportGatewayJar();
         System.out.println("build gateway time=" + (System.currentTimeMillis() - buildStart));
 
 
@@ -54,7 +54,8 @@ public class LocalConsoleApp {
         long pushStart = System.currentTimeMillis();
         new DockerImageBuilder(apiDockerfilePath, imageName)
                 .build();
-//                .push();
+//                .push();                
+        ;
         System.out.println("build/push docker image time=" + (System.currentTimeMillis() - pushStart));
 
 
@@ -69,12 +70,13 @@ public class LocalConsoleApp {
                 .build();
 
         long provStart = System.currentTimeMillis();
+        /*long provStart = System.currentTimeMillis();
         Provisioner provisioner = new Provisioner(doConfig);
         Integer dropletId = provisioner.createDroplet();
         provisioner.waitForDropletCreation(dropletId);
-        System.out.println("provision time = " + (System.currentTimeMillis() - provStart));*/
+        System.out.println("provision time = " + (System.currentTimeMillis() - provStart));
 
-        System.out.println("time = " + (System.currentTimeMillis() - start));
+        System.out.println("time = " + (System.currentTimeMillis() - start));*/
     }
 
     private static void addLambdaJar(File file) throws Exception {

@@ -3,6 +3,7 @@ package com.digitalsanctum.lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -18,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 
 public class Executor implements ResultProvider {
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final Definition definition;
     private Object result;
 
@@ -26,7 +28,7 @@ public class Executor implements ResultProvider {
     }
 
     @SuppressWarnings("unchecked")
-    public ResultProvider execute(final Object input) throws Exception {
+    public ResultProvider execute(final String inputJson) throws Exception {
 
         if (this.definition.getHandler().contains("::")) {
 
@@ -48,8 +50,12 @@ public class Executor implements ResultProvider {
 
             final Object obj = cls.newInstance();
             final Method method = cls.getDeclaredMethod(this.definition.getHandlerMethod(), selectedMethod.getParameterTypes());
-
-            invoke(input, obj, method);
+            
+            // TODO deserialize inputJson
+            // TODO get method args and figure out which one is the input (not Context)
+//            mapper.readValue(inputJson, )
+            
+            invoke(inputJson, obj, method);
 
         } else {
             Class cls = Class.forName(this.definition.getHandler());
@@ -58,8 +64,10 @@ public class Executor implements ResultProvider {
             Map<String, Class> handlerTypes = getRequestHandlerTypes(this.definition.getHandler());
 
             Class requestClass = handlerTypes.get("request");
+            
+            Object inputObj = mapper.readValue(inputJson, requestClass);            
 
-            invoke(input, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
+            invoke(inputObj, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
         }
 
         return this;
@@ -114,9 +122,12 @@ public class Executor implements ResultProvider {
             future.get(timeout, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
-            logger.log("TIMED OUT");
+            logger.log("<< TIMED OUT >>");
+            e.printStackTrace();
         } catch (Exception e) {
             future.cancel(true);
+            logger.log("<< EXCEPTION >>");
+            e.printStackTrace();
         }
 
         executor.shutdownNow();

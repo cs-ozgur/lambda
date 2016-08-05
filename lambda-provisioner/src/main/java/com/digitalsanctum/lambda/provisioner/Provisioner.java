@@ -8,12 +8,9 @@ import com.myjeeva.digitalocean.exception.RequestUnsuccessfulException;
 import com.myjeeva.digitalocean.impl.DigitalOceanClient;
 import com.myjeeva.digitalocean.pojo.Droplet;
 import com.myjeeva.digitalocean.pojo.Image;
-import com.myjeeva.digitalocean.pojo.Images;
 import com.myjeeva.digitalocean.pojo.Region;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
@@ -81,7 +78,7 @@ public class Provisioner {
         }
     }
 
-    public List<Image> getAllImages() throws RequestUnsuccessfulException, DigitalOceanException {
+    /*public List<Image> getAllImages() throws RequestUnsuccessfulException, DigitalOceanException {
         List<Image> allImages = new ArrayList<>();
 
         // gets the first 20 images (page 1)
@@ -100,6 +97,6 @@ public class Provisioner {
         }
 
         return allImages;
-    }
+    }*/
 }
 

@@ -44,7 +44,7 @@ public class Definition {
     }
 
     public Context getContext() {
-        String requestId = UUID.randomUUID().toString();
+        final String requestId = UUID.randomUUID().toString();
         return new SimpleContext(requestId, this.name);
     }
 

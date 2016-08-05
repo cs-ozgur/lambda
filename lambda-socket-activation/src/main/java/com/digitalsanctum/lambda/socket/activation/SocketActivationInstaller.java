@@ -2,8 +2,17 @@ package com.digitalsanctum.lambda.socket.activation;
 
 import com.digitalsanctum.lambda.socket.activation.model.SocketActivationConfiguration;
 import com.google.common.base.Joiner;
-import com.spotify.docker.client.*;
-import com.spotify.docker.client.messages.*;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.exceptions.ContainerNotFoundException;
+import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.DockerRequestException;
+import com.spotify.docker.client.messages.AuthConfig;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.PortBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +65,7 @@ public class SocketActivationInstaller {
                 .install();
     }
 
-    public void install() throws DockerException, InterruptedException, IOException {
+    public void install() throws InterruptedException, IOException, DockerRequestException {
         InputStream in = SocketActivationInstaller.class.getResourceAsStream(configurationFilePath);
         SocketActivationConfiguration sac = new ConfigurationFactory().getConfiguration(in);
 
@@ -84,13 +93,15 @@ public class SocketActivationInstaller {
         log.info("done");
     }
 
-    private void createContainer(SocketActivationConfiguration sac) throws DockerException, InterruptedException {
+    private void createContainer(SocketActivationConfiguration sac) throws InterruptedException, DockerRequestException {
         final String containerName = sac.getName();
         try {
             dockerClient.stopContainer(containerName, 5);
             dockerClient.removeContainer(containerName);
         } catch (ContainerNotFoundException cnfe) {
             // no op
+        } catch (DockerException e) {
+            e.printStackTrace();
         }
 
         // step 1: create docker container
@@ -117,6 +128,8 @@ public class SocketActivationInstaller {
             } else {
                 throw dre;
             }
+        } catch (DockerException e) {
+            e.printStackTrace();
         } finally {
             dockerClient.close();
         }

@@ -43,15 +43,15 @@ A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambd
 
 ### Hello World
 
-    docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" --name api -p 8080:8080 digitalsanctum/lambda-api
+    docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" --name api -p 8084:8080 digitalsanctum/lambda-api
 
-    curl -H "Content-Type: application/json" 'http://localhost:8080/hello?input=shanes'
+    curl -H "Content-Type: application/json" 'http://localhost:8084/hello?input=shane'
 
 ### Hello Pojo
 
-    docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloPojo" --name api -p 8080:8080 digitalsanctum/lambda-api
+    docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloPojo" --name api -p 8084:8080 digitalsanctum/lambda-api
 
-    curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://localhost:8080/hello'
+    curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://localhost:8084/hello'
 
 ### Generator
 

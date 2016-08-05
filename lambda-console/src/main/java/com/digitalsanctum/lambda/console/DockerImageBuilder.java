@@ -1,9 +1,9 @@
 package com.digitalsanctum.lambda.console;
 
 import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerCertificateException;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.AuthConfig;
 
 import java.io.IOException;
@@ -26,14 +26,16 @@ public class DockerImageBuilder {
                     .password(System.getenv("DOCKER_PASSWORD"))
                     .serverAddress("https://index.docker.io/v1/")
                     .build();
-            dockerClient = DefaultDockerClient.fromEnv()
-                    .authConfig(authConfig).build();
+            dockerClient = DefaultDockerClient
+                    .fromEnv()                    
+                    .authConfig(authConfig)
+                    .build();
         } catch (DockerCertificateException e) {
             e.printStackTrace();
         }
     }
 
-    public DockerImageBuilder build() throws DockerCertificateException, InterruptedException, DockerException, IOException {
+    public DockerImageBuilder build() throws DockerCertificateException, InterruptedException, IOException, DockerException {
         dockerClient.build(this.apiDockerfilePath, this.dockerImageName);
         return this;
     }

@@ -1,7 +1,5 @@
 package com.digitalsanctum.lambda.server.service;
 
-import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
-import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.FunctionCodeLocation;
@@ -9,8 +7,6 @@ import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
-import com.amazonaws.services.lambda.model.PublishVersionRequest;
-import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
@@ -58,16 +54,6 @@ public class InMemoryLambdaService implements LambdaService {
   }
 
   @Override
-  public PublishVersionResult publish(PublishVersionRequest publishVersionRequest) {
-
-    PublishVersionResult result = new PublishVersionResult();
-    
-    
-    
-    return result;
-  }
-
-  @Override
   public GetFunctionResult getFunction(String functionName) {
     FunctionConfiguration functionConfiguration = FUNCTIONS.get(functionName);
     if (functionConfiguration == null) {
@@ -103,12 +89,6 @@ public class InMemoryLambdaService implements LambdaService {
     ListFunctionsResult listFunctionsResult = new ListFunctionsResult();
     listFunctionsResult.setFunctions(new ArrayList<>(FUNCTIONS.values()));    
     return listFunctionsResult;
-  }
-
-  @Override
-  public CreateEventSourceMappingResult saveEventSourceMapping(CreateEventSourceMappingRequest request) {
-    // TODO
-    throw new IllegalStateException("Not implemented");
   }
 
   @Override

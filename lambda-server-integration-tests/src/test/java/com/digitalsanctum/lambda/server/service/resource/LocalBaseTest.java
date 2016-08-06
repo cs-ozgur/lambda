@@ -1,7 +1,5 @@
 package com.digitalsanctum.lambda.server.service.resource;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.digitalsanctum.lambda.server.LambdaServer;
 import org.junit.AfterClass;
@@ -14,9 +12,8 @@ import org.junit.BeforeClass;
  */
 public class LocalBaseTest extends BaseTest {
 
-  private static final String TEST_PROFILE_NAME = "local";
   private static final int TEST_PORT = 8080;
-  protected static final String ENDPOINT = "http://lambda.local.amazonaws.com:" + TEST_PORT;
+  protected static final String ENDPOINT = "http://localhost:" + TEST_PORT;
   private static LambdaServer lambdaServer;
 
   @BeforeClass
@@ -32,8 +29,6 @@ public class LocalBaseTest extends BaseTest {
   
   @Before
   public void setup() throws Exception {
-    AWSCredentialsProvider awsCredentialsProvider = new ProfileCredentialsProvider(TEST_PROFILE_NAME);
-    awsLambda = new AWSLambdaClient(awsCredentialsProvider)
-        .withEndpoint(ENDPOINT);
+    awsLambda = new AWSLambdaClient().withEndpoint(ENDPOINT);
   }
 }

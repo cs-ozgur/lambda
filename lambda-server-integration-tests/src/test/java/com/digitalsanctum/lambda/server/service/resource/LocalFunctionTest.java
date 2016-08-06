@@ -1,7 +1,5 @@
 package com.digitalsanctum.lambda.server.service.resource;
 
-import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
-import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.DeleteFunctionRequest;
@@ -13,8 +11,6 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.ListFunctionsRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
-import com.amazonaws.services.lambda.model.PublishVersionRequest;
-import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.util.IOUtils;
@@ -24,7 +20,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,31 +62,6 @@ public class LocalFunctionTest extends LocalBaseTest {
     HttpGet request = new HttpGet(ENDPOINT + "/healthcheck"); 
     HttpResponse response = httpClient.execute(request);
     assertEquals(200, response.getStatusLine().getStatusCode());
-  }
-  
-  @Test
-  public void testPublishVersionRequest() throws Exception {
-
-    CreateFunctionRequest createFunctionRequest = new CreateFunctionRequest()
-        .withFunctionName(TEST_FUNCTION_NAME)
-        .withHandler(TEST_HANDLER)
-        .withRuntime(TEST_RUNTIME);
-
-    CreateFunctionResult result = awsLambda.createFunction(createFunctionRequest);
-    assertNotNull(result);
-    assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());
-    assertEquals(TEST_ARN, result.getFunctionArn());
-    
-    PublishVersionRequest r = new PublishVersionRequest();
-    r.setFunctionName(TEST_FUNCTION_NAME);
-    r.setCodeSha256("testSha");
-    r.setDescription("test description");
-    
-    // TODO
-    
-    PublishVersionResult publishVersionResult = awsLambda.publishVersion(r);
-    
-    assertNotNull(publishVersionResult);
   }
 
   @Test
@@ -179,7 +149,6 @@ public class LocalFunctionTest extends LocalBaseTest {
     invokeRequest.setPayload(new String(payload));
     invokeRequest.setFunctionName(TEST_FUNCTION_NAME);
 
-
     InvokeResult invokeResult = awsLambda.invoke(invokeRequest);
     
     ByteBuffer byteBuffer = invokeResult.getPayload();
@@ -188,9 +157,7 @@ public class LocalFunctionTest extends LocalBaseTest {
     System.out.println(resultPayloadJson);
     
     UpdateFunctionCodeRequest updateFunctionCodeRequest = new UpdateFunctionCodeRequest();
-    updateFunctionCodeRequest.setPublish(true);
-    
-    
+    updateFunctionCodeRequest.setPublish(true);    
   }
 
   /**
@@ -202,13 +169,6 @@ public class LocalFunctionTest extends LocalBaseTest {
     createFunction();
     
     invoke_RequestResponse();
-  }
-  
-  @Test
-  @Ignore
-  public void testCreateEventSourceMappingRequest() throws Exception {
-    CreateEventSourceMappingRequest createEventSourceMappingRequest = new CreateEventSourceMappingRequest();
-    CreateEventSourceMappingResult mappingResult = awsLambda.createEventSourceMapping(createEventSourceMappingRequest);
   }
   
   private void createFunction() throws Exception {
@@ -232,6 +192,4 @@ public class LocalFunctionTest extends LocalBaseTest {
     assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());
     assertEquals(TEST_ARN, result.getFunctionArn());
   }
-
-  
 }

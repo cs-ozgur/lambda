@@ -93,7 +93,13 @@ public class LambdaServer {
   }
 
   public static void main(String[] args) throws Exception {
-    LambdaServer lambdaServer = new LambdaServer(8080);
+    
+    int port = 8080;
+    if (args != null && args.length == 1) {
+      port = Integer.parseInt(args[0]);
+    }
+    
+    LambdaServer lambdaServer = new LambdaServer(port);
     lambdaServer.start();
   }
 }

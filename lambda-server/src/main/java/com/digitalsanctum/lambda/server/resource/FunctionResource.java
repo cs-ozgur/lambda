@@ -8,14 +8,11 @@ import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
-import com.amazonaws.services.lambda.model.PublishVersionRequest;
-import com.amazonaws.services.lambda.model.PublishVersionResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
-import com.digitalsanctum.lambda.server.service.InMemoryLambdaService;
 import com.digitalsanctum.lambda.server.service.LambdaService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import org.slf4j.Logger;
@@ -52,25 +49,6 @@ public class FunctionResource {
 
   public FunctionResource(LambdaService lambdaService) {
     this.lambdaService = lambdaService;
-  }
-
-  @POST
-  @Path("/{functionName}/versions")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response publishVersion(@PathParam("functionName") String functionName,
-                                 PublishVersionRequest publishVersionRequest) throws ResourceNotFoundException {
-
-
-    getFunction(functionName);
-
-    PublishVersionResult result = lambdaService.publish(publishVersionRequest);
-
-    return Response
-        .status(Response.Status.OK)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
-        .entity(result)
-        .build();
   }
 
   @DELETE
@@ -191,7 +169,7 @@ public class FunctionResource {
   public Response listFunctions() {
 
     log.info("listing functions");
-    
+
     ListFunctionsResult listFunctionsResult = lambdaService.listFunctions();
 
     return Response
@@ -221,12 +199,12 @@ public class FunctionResource {
     InvokeRequest invokeRequest = new InvokeRequest();
     invokeRequest.setPayload(input);
     invokeRequest.setFunctionName(functionName);
+    invokeRequest.setSdkRequestTimeout(30);
 
     FunctionConfiguration functionConfiguration = getFunctionResult.getConfiguration();
     FunctionCodeLocation functionCodeLocation = getFunctionResult.getCode();
 
     Object invokeResult = lambdaService.invokeFunction(invokeRequest, functionConfiguration, functionCodeLocation);
-
     return Response
         .status(Response.Status.OK)
         .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())

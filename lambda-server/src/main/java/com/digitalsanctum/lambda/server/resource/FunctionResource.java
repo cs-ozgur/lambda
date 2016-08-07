@@ -83,6 +83,8 @@ public class FunctionResource {
   public Response createFunction(CreateFunctionRequest request,
                                  @HeaderParam("amz-sdk-invocation-id") String awsSdkInvocationId) {
 
+    log.info("creating function");
+    
     FunctionConfiguration fc = new FunctionConfiguration();
     fc.setFunctionName(request.getFunctionName());
     fc.setFunctionArn(ArnUtils.of(request.getFunctionName()));
@@ -91,6 +93,9 @@ public class FunctionResource {
 
     // save lambda jar to tmp dir and persist the path
     if (request.getCode() != null) {
+      
+      log.info("updating function code");
+      
       FunctionCode code = request.getCode();
       UpdateFunctionCodeRequest updateFunctionCodeRequest = new UpdateFunctionCodeRequest();
       updateFunctionCodeRequest.setFunctionName(fc.getFunctionName());
@@ -100,6 +105,8 @@ public class FunctionResource {
 
     CreateFunctionResult result = lambdaService.saveFunctionConfiguration(fc);
 
+    log.info(result.toString());
+    
     return Response
         .status(Response.Status.CREATED)
         .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
@@ -152,6 +159,8 @@ public class FunctionResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getFunction(@PathParam("functionName") String functionName) {
+    
+    log.info("getting function {}", functionName);
 
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);

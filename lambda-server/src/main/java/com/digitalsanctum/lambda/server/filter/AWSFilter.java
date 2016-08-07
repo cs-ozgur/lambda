@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
@@ -43,7 +45,7 @@ public class AWSFilter implements Filter {
       @Override
       public String getHeader(String name) {
         String origValue = super.getHeader(name);
-        if (CONTENT_TYPE.equals(name) && Objects.equals(origValue, "")) {
+        if (CONTENT_TYPE.equals(name) && (origValue == null || Objects.equals(origValue, ""))) {
           log.warn("missing value for Content-Type header; setting to {}", APPLICATION_JSON);
           return APPLICATION_JSON;
         }
@@ -53,10 +55,30 @@ public class AWSFilter implements Filter {
       @Override
       public Enumeration<String> getHeaders(String name) {
         Enumeration<String> headers = super.getHeaders(name);
-        if (CONTENT_TYPE.equals(name) && Objects.equals(headers.nextElement(), "")) {
-          return Collections.enumeration(ImmutableSet.of(APPLICATION_JSON));
+        if (CONTENT_TYPE.equals(name)) {
+          boolean missingValue = false;
+          try {
+            if (Objects.equals(headers.nextElement(), "")) {
+              missingValue = true;
+            }
+          } catch (NoSuchElementException e) {
+            missingValue = true;
+          }          
+          if (missingValue) {
+            return Collections.enumeration(ImmutableSet.of(APPLICATION_JSON));
+          }          
         }
         return headers;
+      }
+      
+      @Override
+      public Enumeration<String> getHeaderNames() {
+        List<String> names = Collections.list(super.getHeaderNames());
+        if (names.contains(CONTENT_TYPE)) {
+          return super.getHeaderNames();
+        }
+        names.add(CONTENT_TYPE);
+        return Collections.enumeration(names);
       }
     }, servletResponse);
   }

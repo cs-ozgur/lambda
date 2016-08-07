@@ -34,10 +34,13 @@ will start the server on port 8080 by default. Or provide the port to run on:
 
 AWS CLI:
 
-List functions:
+List functions (AWS):
 
-    aws lambda list-functions --profile local --endpoint-url http://localhost:8080
     aws lambda list-functions --profile shane
+    
+List functions (Local):
+    
+    aws lambda list-functions --profile local --endpoint-url http://localhost:8080
     
 Create a function (AWS):    
     
@@ -105,3 +108,5 @@ AWS Java SDK:
     new AWSLambdaClient()
         .withEndpoint("http://localhost:8080)
         .listFunctions(new ListFunctionsRequest().withMaxItems(10));
+        
+        

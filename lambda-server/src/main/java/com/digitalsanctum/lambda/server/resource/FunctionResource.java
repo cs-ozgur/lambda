@@ -124,6 +124,8 @@ public class FunctionResource {
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
 
+    updateFunctionCodeRequest.setFunctionName(functionName);
+    
     UpdateFunctionCodeResult updateFunctionCodeResult = lambdaService.updateFunctionCode(updateFunctionCodeRequest);
 
     return Response

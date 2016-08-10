@@ -97,11 +97,11 @@ Update code for a function (Local):
     
 Delete a function:
 
-    aws lambda delete-function --function-name test1 --profile shane
+    aws lambda delete-function --function-name test1 --profile local --endpoint-url http://localhost:8080
     
 Confirm the deletion by listing functions again:
 
-    aws lambda list-functions --profile shane     
+    aws lambda list-functions --profile local --endpoint-url http://localhost:8080   
     
 AWS Java SDK:
     

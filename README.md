@@ -27,9 +27,10 @@ Deploy and invoke AWS Lambda functions locally.
 - Support for event sources such as AWS DynamoDB and AWS Kinesis Streams
 
 
-## lambda-docker-bridge
+## lambda-bridge-server
 
-Serves as a proxy between lambda-server and Docker engine.
+Serves as a proxy between lambda-server and Docker engine. Responsible for building Docker images that wrap Lambda functions 
+and creating and running Docker containers.
 
 ## lambda-server
 

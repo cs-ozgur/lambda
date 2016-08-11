@@ -19,8 +19,8 @@ Deploy and invoke AWS Lambda functions locally.
 ## Features
 - Deploy Lambda functions locally and invoke them
 - Compatible with AWS Lambda SDK and CLI
-- lambda-bridge-server  
-- lambda-server
+- lambda-bridge-server: manages underlying Docker images and containers to support Lambda functions
+- lambda-server: hosts Lambda endpoints; delegates to lambda-bridge-server for CreateFunction and Invoke Lambda actions. 
 
 ## Road map
 

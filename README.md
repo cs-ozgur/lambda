@@ -19,7 +19,7 @@ Deploy and invoke AWS Lambda functions locally.
 ## Features
 - Deploy Lambda functions locally and invoke them
 - Compatible with AWS Lambda SDK and CLI
-- lambda-docker-bridge 
+- lambda-bridge-server  
 - lambda-server
 
 ## Road map
@@ -45,10 +45,10 @@ You can use the AWS CLI and AWS Java SDK to operate like you normally would with
 
 ## Usage
 
-Start lambda-docker-bridge:
+Start lambda-bridge-server:
 
-    cd lambda-docker-bridge/target    
-    java -jar lambda-server-1.0-SNAPSHOT.jar
+    cd lambda-bridge-server/target    
+    java -jar lambda-bridge-server-1.0-SNAPSHOT.jar
 
 Start lambda-server:
 
@@ -75,7 +75,7 @@ Create a function (AWS):
        --runtime java8 \
        --role arn:aws:iam::515292396565:role/lambda_basic_execution \
        --handler com.digitalsanctum.lambda.samples.HelloPojo \
-       --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
+       --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
        --description "test1 description" \
        --timeout 30 \
        --memory-size 512 \
@@ -87,7 +87,7 @@ Create a function (Local):
        --runtime java8 \
        --role arn:aws:iam::515292396565:role/lambda_basic_execution \
        --handler com.digitalsanctum.lambda.samples.HelloPojo \
-       --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
+       --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
        --description "test1 description" \
        --timeout 30 \
        --memory-size 512 \
@@ -104,22 +104,22 @@ Get a function (Local):
     
 Invoke a function (AWS):    
     
-    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --profile shane foo.json
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --profile shane output.json
     
 Invoke a function (Local):    
     
-    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 foo.json    
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output.json    
     
 Update code for a function (AWS):
 
     aws lambda update-function-code --function-name test1 \
-        --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
+        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
         --profile shane
                 
 Update code for a function (Local):
 
     aws lambda update-function-code --function-name test1 \
-        --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
+        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
         --endpoint-url http://localhost:8080            
     
 Delete a function:

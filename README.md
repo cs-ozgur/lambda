@@ -1,83 +1,139 @@
 
-# lambda
+# Lambda
 
-A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambda](https://aws.amazon.com/lambda/).
+Deploy and invoke AWS Lambda functions locally.
 
 **NOTE: This project continues to be a work in progress. Expect breaking changes.**
 
+
+## Prerequistes
+
+- Java 8
+- Maven
+- Docker engine
+
+## build
+
+    mvn clean install
+    
 ## Features
-- Compatible with AWS Lambda - the same artifacts will work
-- Meant to be self-hosted
+- Deploy Lambda functions locally and invoke them
+- Compatible with AWS Lambda SDK and CLI
+- lambda-docker-bridge 
+- lambda-server
 
-## Lambda Variables
+## Road map
 
-- LAMBDA_JAR - path to the lambda jar.
-- LAMBDA_HANDLER - the lambda class which implements RequestHandler<I,O>
-- LAMBDA_HTTP_METHOD - only GET or POST is currently supported. default is POST
-- LAMBDA_RESOURCE - the http path to map to the handler (for example "/hello")
-- LAMBDA_TIMEOUT - the maximum amount of time to wait for a call to finish
-
-## TODO
-- easy deploy to public clouds
-    - start with AWS EC2 and Digital Ocean
-- generator
-    - lambda documentation?
-    - HTTP client
-- console/meta
-    - with persistence to map functions to endpoints
-    - manage lifecycle of lambdas
-    - paste Java code for the lambda and use a container to compile
-- metrics
-- scheduler
-- events
-    - S3
-    - Github webhook
-
-## Half-baked ideas
-- configuration for function and how/where it's hosted
-- Use lambdas to generate other lambdas
-- chaining and/or side car lambdas
-- marketplace
-
-## Examples
-
-### Hello World
-
-    docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" --name api -p 8084:8080 digitalsanctum/lambda-api
-
-    curl -H "Content-Type: application/json" 'http://localhost:8084/hello?input=shane'
-
-### Hello Pojo
-
-    docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloPojo" --name api -p 8084:8080 digitalsanctum/lambda-api
-
-    curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://localhost:8084/hello'
-
-### Generator
-
-Generates export/api.jar
-
-- LAMBDA_JAR - path of shaded jar containing lambda class
-- LAMBDA_HANDLER - fully qualified lambda handler class
-- LAMBDA_RESOURCE_PATH - request context of lambda function
-- LAMBDA_HTTP_METHOD - HTTP method of lambda handler
-- LAMBDA_TIMEOUT - execution timeout before lambda function is terminated
-- LAMBDA_MAX_MEMORY - value for Xmx to run lambda api app (should be less than DO_SIZE)
-- LAMBDA_API_JAR - path of exported api gateway jar (export/api.jar)
+- Support for event sources such as AWS DynamoDB and AWS Kinesis Streams
 
 
-### Provisioner
+## lambda-docker-bridge
 
-Creates a droplet, pulls the lambda-api docker image and runs the docker container.
+Serves as a proxy between lambda-server and Docker engine.
 
-- LAMBDA_DOCKER_EMAIL
-- LAMBDA_DOCKER_USERNAME
-- LAMBDA_DOCKER_PASSWORD
-- LAMBDA_DOCKER_IMAGE
-- LAMBDA_DO_TOKEN - digitalocean token
-- LAMBDA_DO_SIZE - memory size of droplet. For example, "512mb"
-- LAMBDA_DO_REGION - geographic region slug. For example, "sfo1"
-- LAMBDA_PORT - optional; defaults to 8080
+## lambda-server
 
+A standalone server that implements the following AWS Lambda endpoints:
 
+- CreateFunction
+- DeleteFunction
+- GetFunction
+- Invoke
+- ListFunctions
 
+You can use the AWS CLI and AWS Java SDK to operate like you normally would with real AWS endpoints.
+
+## Usage
+
+Start lambda-docker-bridge:
+
+    cd lambda-docker-bridge/target    
+    java -jar lambda-server-1.0-SNAPSHOT.jar
+
+Start lambda-server:
+
+    cd lambda-servet/target    
+    java -jar lambda-server-1.0-SNAPSHOT.jar 
+   
+will start the server on port 8080 by default. Or provide the port to run on:
+    
+    java -jar lambda-server-1.0-SNAPSHOT.jar 7000
+
+AWS CLI:
+
+List functions (AWS):
+
+    aws lambda list-functions --profile shane
+    
+List functions (Local):
+    
+    aws lambda list-functions --profile local --endpoint-url http://localhost:8080
+    
+Create a function (AWS):    
+    
+    aws lambda create-function --function-name test1 \
+       --runtime java8 \
+       --role arn:aws:iam::515292396565:role/lambda_basic_execution \
+       --handler com.digitalsanctum.lambda.samples.HelloPojo \
+       --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
+       --description "test1 description" \
+       --timeout 30 \
+       --memory-size 512 \
+       --profile shane
+       
+Create a function (Local):       
+       
+    aws lambda create-function --function-name test1 \
+       --runtime java8 \
+       --role arn:aws:iam::515292396565:role/lambda_basic_execution \
+       --handler com.digitalsanctum.lambda.samples.HelloPojo \
+       --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
+       --description "test1 description" \
+       --timeout 30 \
+       --memory-size 512 \
+       --endpoint-url http://localhost:8080
+                  
+       
+Get a function (AWS):       
+    
+    aws lambda get-function --function-name test1 --profile shane
+    
+Get a function (Local):       
+    
+    aws lambda get-function --function-name test1 --endpoint-url http://localhost:8080    
+    
+Invoke a function (AWS):    
+    
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --profile shane foo.json
+    
+Invoke a function (Local):    
+    
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 foo.json    
+    
+Update code for a function (AWS):
+
+    aws lambda update-function-code --function-name test1 \
+        --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
+        --profile shane
+                
+Update code for a function (Local):
+
+    aws lambda update-function-code --function-name test1 \
+        --zip-file fileb:///Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
+        --endpoint-url http://localhost:8080            
+    
+Delete a function:
+
+    aws lambda delete-function --function-name test1 --profile local --endpoint-url http://localhost:8080
+    
+Confirm the deletion by listing functions again:
+
+    aws lambda list-functions --profile local --endpoint-url http://localhost:8080   
+    
+AWS Java SDK:
+    
+    new AWSLambdaClient()
+        .withEndpoint("http://localhost:8080)
+        .listFunctions(new ListFunctionsRequest().withMaxItems(10));
+        
+        

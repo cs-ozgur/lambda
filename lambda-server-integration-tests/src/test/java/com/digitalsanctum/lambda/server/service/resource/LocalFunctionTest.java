@@ -37,10 +37,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * NOTE:
- * 1. update /etc/hosts to point 'lambda.local.amazonaws.com' to 127.0.0.1
- * 2. update ~/.aws/credentials and ~/.aws/config to match arg passed to ProfileCredentialsProvider
- *
  * @author Shane Witbeck
  * @since 7/17/16
  */

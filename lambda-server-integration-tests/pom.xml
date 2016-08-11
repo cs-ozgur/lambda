@@ -24,7 +24,7 @@
             <groupId>com.digitalsanctum.lambda</groupId>
             <artifactId>lambda-server</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
+            <scope>test</scope>            
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

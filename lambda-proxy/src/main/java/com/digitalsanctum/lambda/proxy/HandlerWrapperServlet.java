@@ -3,6 +3,7 @@ package com.digitalsanctum.lambda.proxy;
 import com.digitalsanctum.lambda.Executor;
 import com.digitalsanctum.lambda.ResultProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jetty.http.HttpStatus;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -21,6 +22,15 @@ public class HandlerWrapperServlet extends HttpServlet {
 
   public HandlerWrapperServlet(Executor executor) {
     this.executor = executor;
+  }
+
+  @Override
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException
+  {
+    resp.setStatus(HttpStatus.OK_200);
+    resp.setContentType("application/json");
+    resp.getWriter().write("{\"status\":\"OK\"}");
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -114,18 +115,18 @@ public class InMemoryLambdaService implements LambdaService {
     runContainerRequest.setHandler(functionConfiguration.getHandler());
 
     RunContainerResult runContainerResult = null;
-    CloseableHttpClient httpclient = HttpClients.createDefault();
+    CloseableHttpClient httpClient = HttpClients.createDefault();
     try {
 
       // TODO make endpoint configurable
-      HttpPost post = new HttpPost("http://localhost:" + 8082 + "/containers");
+      HttpPost post = new HttpPost("http://localhost:8082/containers");
 
       String requestJson = objectMapper.writeValueAsString(runContainerRequest);
       StringEntity input = new StringEntity(requestJson);
       post.setEntity(input);
       input.setContentType("application/json");
 
-      CloseableHttpResponse response = httpclient.execute(post);
+      CloseableHttpResponse response = httpClient.execute(post);
       
       HttpEntity entity = response.getEntity();
       String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
@@ -138,15 +139,13 @@ public class InMemoryLambdaService implements LambdaService {
     // call the endpoint
     String endpoint = runContainerResult.getEndpoint();
 
-    // TODO add more robust wait to the endpoint
-    
-    System.out.println("waiting for container to become available");
-    try {
-      Thread.sleep(3000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    boolean up = false;
+    log.info("waiting for container to become available");
+    long start = System.currentTimeMillis();
+    while(!up) {
+      up = isEndpointAvailable(httpClient, endpoint, 500);
     }
-
+    log.info("Container is available; took {} ms", (System.currentTimeMillis() - start));
 
     try {
       ByteBuffer payloadByteBuffer = invokeRequest.getPayload();
@@ -157,7 +156,7 @@ public class InMemoryLambdaService implements LambdaService {
       post.setEntity(input);
       input.setContentType("application/json");
 
-      CloseableHttpResponse response = httpclient.execute(post);
+      CloseableHttpResponse response = httpClient.execute(post);
 
       HttpEntity entity = response.getEntity();
       String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
@@ -169,6 +168,24 @@ public class InMemoryLambdaService implements LambdaService {
     }
     return null;
   }
+  
+  private boolean isEndpointAvailable(CloseableHttpClient httpclient, String endpoint, int sleepPeriod) {
+    try {
+      HttpGet healthCheck = new HttpGet(endpoint);
+      CloseableHttpResponse response = httpclient.execute(healthCheck);
+      if (response.getStatusLine().getStatusCode() == 200) {
+        return true;
+      }
+    } catch (Exception e) {
+      try {
+        Thread.sleep(sleepPeriod);
+      } catch (InterruptedException e1) {
+        // noop
+      }
+    }
+    return false;
+  }
+  
 
   @Override
   public UpdateFunctionConfigurationResult updateFunctionConfiguration(UpdateFunctionConfigurationRequest request) {

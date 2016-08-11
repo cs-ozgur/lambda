@@ -24,8 +24,10 @@ Deploy and invoke AWS Lambda functions locally.
 
 ## Road map
 
-- Support for event sources such as AWS DynamoDB and AWS Kinesis Streams
-
+- Persist configurations between server restarts.
+- Support for event sources such as AWS DynamoDB and AWS Kinesis Streams.
+- More examples
+- ?
 
 ## lambda-bridge-server
 
@@ -60,27 +62,11 @@ will start the server on port 8080 by default. Or provide the port to run on:
     
     java -jar lambda-server-1.0-SNAPSHOT.jar 7000
 
-AWS CLI:
-
-List functions (AWS):
-
-    aws lambda list-functions --profile shane
+### AWS CLI
     
 List functions (Local):
     
     aws lambda list-functions --profile local --endpoint-url http://localhost:8080
-    
-Create a function (AWS):    
-    
-    aws lambda create-function --function-name test1 \
-       --runtime java8 \
-       --role arn:aws:iam::515292396565:role/lambda_basic_execution \
-       --handler com.digitalsanctum.lambda.samples.HelloPojo \
-       --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
-       --description "test1 description" \
-       --timeout 30 \
-       --memory-size 512 \
-       --profile shane
        
 Create a function (Local):       
        
@@ -94,28 +80,13 @@ Create a function (Local):
        --memory-size 512 \
        --endpoint-url http://localhost:8080
                   
-       
-Get a function (AWS):       
-    
-    aws lambda get-function --function-name test1 --profile shane
-    
 Get a function (Local):       
     
     aws lambda get-function --function-name test1 --endpoint-url http://localhost:8080    
     
-Invoke a function (AWS):    
-    
-    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --profile shane output.json
-    
 Invoke a function (Local):    
     
     aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output.json    
-    
-Update code for a function (AWS):
-
-    aws lambda update-function-code --function-name test1 \
-        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
-        --profile shane
                 
 Update code for a function (Local):
 
@@ -131,7 +102,7 @@ Confirm the deletion by listing functions again:
 
     aws lambda list-functions --profile local --endpoint-url http://localhost:8080   
     
-AWS Java SDK:
+### AWS Java SDK
     
     new AWSLambdaClient()
         .withEndpoint("http://localhost:8080)

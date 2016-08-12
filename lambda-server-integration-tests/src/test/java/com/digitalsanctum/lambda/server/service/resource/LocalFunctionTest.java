@@ -17,18 +17,13 @@ import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,19 +37,17 @@ import static org.junit.Assert.assertNotNull;
  */
 public class LocalFunctionTest extends LocalBaseTest {
 
-  private static final Logger log = LoggerFactory.getLogger(LocalFunctionTest.class);
-
   private static final ObjectMapper mapper = new ObjectMapper();
   
+  private static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
   private static final String TEST_RUNTIME = "java8";
   private static final String TEST_HANDLER = "com.digitalsanctum.lambda.samples.HelloPojo";
-  private static final String TEST_JAR_PATH = "/Users/switbe/projects/lambda/lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar";
   private static final String TEST_ARN = "arn:aws:lambda:local:111000111000:function:" + TEST_FUNCTION_NAME;
   private static final int TEST_TIMEOUT = 30;
 
   @Test
   public void testHealthcheck() throws Exception {
-    HttpClient httpClient = new DefaultHttpClient();
+    CloseableHttpClient httpClient = HttpClients.createDefault();
     HttpGet request = new HttpGet(ENDPOINT + "/healthcheck"); 
     HttpResponse response = httpClient.execute(request);
     assertEquals(200, response.getStatusLine().getStatusCode());
@@ -107,8 +100,7 @@ public class LocalFunctionTest extends LocalBaseTest {
         .withHandler(TEST_HANDLER)
         .withRuntime(TEST_RUNTIME);
 
-    Path lambdaPath = Paths.get(TEST_JAR_PATH);
-    InputStream is = Files.newInputStream(lambdaPath);
+    InputStream is = LocalFunctionTest.class.getResourceAsStream(TEST_LAMBDA_JAR);
     byte[] lambdaByteArr = IOUtils.toByteArray(is);
     ByteBuffer byteBuffer = ByteBuffer.wrap(lambdaByteArr);
         
@@ -160,10 +152,8 @@ public class LocalFunctionTest extends LocalBaseTest {
    * http://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
    */
   @Test
-  public void testInvokeRequest_RequestResponse() throws Exception {
-    
-    createFunction();
-    
+  public void testInvokeRequest_RequestResponse() throws Exception {    
+    createFunction();    
     invoke_RequestResponse();
   }
   
@@ -175,8 +165,7 @@ public class LocalFunctionTest extends LocalBaseTest {
         .withTimeout(TEST_TIMEOUT)
         .withRuntime(TEST_RUNTIME);
 
-    Path lambdaPath = Paths.get(TEST_JAR_PATH);
-    InputStream is = Files.newInputStream(lambdaPath);
+    InputStream is = LocalFunctionTest.class.getResourceAsStream(TEST_LAMBDA_JAR);
     byte[] lambdaByteArr = IOUtils.toByteArray(is);
     ByteBuffer byteBuffer = ByteBuffer.wrap(lambdaByteArr);
 

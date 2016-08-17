@@ -133,7 +133,7 @@ public class InMemoryLambdaService implements LambdaService {
       runContainerResult = objectMapper.readValue(responseJson.getBytes(), RunContainerResult.class);
       
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error("Error", e);
     }
     
     // call the endpoint
@@ -255,7 +255,7 @@ public class InMemoryLambdaService implements LambdaService {
       FUNCTION_CODE_LOCATION.put(updateFunctionCodeRequest.getFunctionName(), functionCodeLocation);
 
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Error updating function code", e);
     }
     return result;
   }

@@ -6,6 +6,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -22,6 +23,7 @@ public class AWSFunctionTest extends BaseTest {
   }
   
   @Test
+  @Ignore
   public void testInvokeRequest_RequestResponse() throws Exception {
     invoke_RequestResponse();
   }

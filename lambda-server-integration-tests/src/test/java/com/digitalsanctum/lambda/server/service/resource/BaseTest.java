@@ -19,7 +19,7 @@ class BaseTest {
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  static final String TEST_FUNCTION_NAME = "HelloPojo";
+  static final String TEST_FUNCTION_NAME = "concat";
 
   AWSLambda awsLambda;
 

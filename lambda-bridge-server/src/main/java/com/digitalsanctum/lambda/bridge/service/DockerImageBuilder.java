@@ -6,6 +6,8 @@ import com.google.common.io.Files;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,6 +24,8 @@ import java.util.List;
  * @since 8/8/16
  */
 public class DockerImageBuilder implements ImageBuilder<Image> {
+  
+  private static final Logger log = LoggerFactory.getLogger(DockerImageBuilder.class);
   
   private final DockerClient dockerClient;
 
@@ -86,7 +90,9 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
     String id = null;
     try {
       id = dockerClient.build(tmpDir.toPath(), createImageRequest.getImageName());
-    } catch (DockerException | InterruptedException | IOException e) {
+    } catch (DockerException de) {
+      log.error("Error creating Docker image '{}'", createImageRequest.getImageName(), de);
+    } catch (InterruptedException | IOException e) {
       e.printStackTrace();
     }
 

@@ -35,6 +35,7 @@ public class LambdaServer {
 
   private Server server;
   private int port;
+  private boolean running = false;
 
   public LambdaServer(int port) {
     this.port = port;
@@ -84,12 +85,18 @@ public class LambdaServer {
 
   public void start() throws Exception {
     server.start();
+    running = true;
     log.info("started on port {}", port);
   }
 
   public void stop() throws Exception {
     server.stop();
+    running = false;
     log.info("stopped");
+  }
+
+  public boolean isRunning() {
+    return running;
   }
 
   public static void main(String[] args) throws Exception {

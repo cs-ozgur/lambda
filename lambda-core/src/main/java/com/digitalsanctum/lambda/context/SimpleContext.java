@@ -32,6 +32,16 @@ public class SimpleContext implements Context {
         return this.functionName;
     }
 
+    @Override
+    public String getFunctionVersion() {
+        return null;
+    }
+
+    @Override
+    public String getInvokedFunctionArn() {
+        return null;
+    }
+
     public CognitoIdentity getIdentity() {
         return null;
     }

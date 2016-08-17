@@ -9,6 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>lambda-server-integration-tests</artifactId>
+    <name>Integration Tests</name>
 
     <dependencies>
         <dependency>
@@ -25,6 +26,12 @@
             <artifactId>lambda-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>            
+        </dependency>
+        <dependency>
+            <groupId>com.digitalsanctum.lambda</groupId>
+            <artifactId>lambda-bridge-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

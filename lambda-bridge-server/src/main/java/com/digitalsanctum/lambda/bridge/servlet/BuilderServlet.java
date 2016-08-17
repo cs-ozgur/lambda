@@ -4,9 +4,9 @@ import com.digitalsanctum.lambda.bridge.service.ImageBuilder;
 import com.digitalsanctum.lambda.bridge.util.RequestUtils;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spotify.docker.client.messages.Image;
-import com.spotify.docker.client.shaded.com.fasterxml.jackson.core.type.TypeReference;
-import com.spotify.docker.client.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 
 import javax.servlet.ServletException;

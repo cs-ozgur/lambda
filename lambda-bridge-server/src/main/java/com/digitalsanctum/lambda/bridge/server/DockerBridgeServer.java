@@ -9,6 +9,8 @@ import com.digitalsanctum.lambda.bridge.servlet.ContainerServlet;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Version;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
@@ -27,6 +29,7 @@ public class DockerBridgeServer {
 
   private Server server;
   private int port;
+  private boolean running = false;
 
   public DockerBridgeServer(int port) throws DockerCertificateException {
     this.port = port;
@@ -35,6 +38,13 @@ public class DockerBridgeServer {
     sch.setContextPath("/");
     
     final DockerClient dockerClient = DefaultDockerClient.fromEnv().build();
+    try {
+      Version version = dockerClient.version();
+      log.info(version.toString());
+    } catch (DockerException | InterruptedException e) {
+      log.error("Error connecting to Docker", e);
+      System.exit(1);
+    }
 
     ImageBuilder imageBuilder = new DockerImageBuilder(dockerClient);
     BuilderServlet builderServlet = new BuilderServlet(imageBuilder);
@@ -60,12 +70,18 @@ public class DockerBridgeServer {
 
   public void start() throws Exception {
     server.start();
+    running = true;
     log.info("started on port {}", port);
   }
 
   public void stop() throws Exception {
     server.stop();
+    running = false;
     log.info("stopped");
+  }
+  
+  public boolean isRunning() {
+    return running;
   }
 
   public static void main(String[] args) throws Exception {

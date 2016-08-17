@@ -4,8 +4,8 @@ import com.digitalsanctum.lambda.bridge.service.ContainerService;
 import com.digitalsanctum.lambda.bridge.util.RequestUtils;
 import com.digitalsanctum.lambda.model.RunContainerRequest;
 import com.digitalsanctum.lambda.model.RunContainerResult;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 
 import javax.servlet.ServletException;

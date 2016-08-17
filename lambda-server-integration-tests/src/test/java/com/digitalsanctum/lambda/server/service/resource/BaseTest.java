@@ -3,7 +3,7 @@ package com.digitalsanctum.lambda.server.service.resource;
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
-import com.digitalsanctum.lambda.samples.TestRequest;
+import com.digitalsanctum.lambda.functions.model.ConcatRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -24,7 +24,7 @@ class BaseTest {
   AWSLambda awsLambda;
 
   String getTestRequest() throws JsonProcessingException {
-    TestRequest testRequest = new TestRequest();
+    ConcatRequest testRequest = new ConcatRequest();
     testRequest.setFirstName("Shane");
     testRequest.setLastName("Witbeck");
     return new String(mapper.writeValueAsBytes(testRequest));

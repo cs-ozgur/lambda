@@ -11,9 +11,9 @@
     <modules>
         <module>lambda-core</module>
         <module>lambda-bridge-server</module>
+        <module>lambda-functions</module>
         <module>lambda-model</module>
         <module>lambda-proxy</module>
-        <module>lambda-samples</module>
         <module>lambda-server</module>
         <module>lambda-server-integration-tests</module>
     </modules>
@@ -24,7 +24,7 @@
         <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
 
-        <aws-java-sdk-lambda.version>1.11.25</aws-java-sdk-lambda.version>
+        <aws-java-sdk-lambda.version>1.11.26</aws-java-sdk-lambda.version>
         <aws-lambda-java-core.version>1.1.0</aws-lambda-java-core.version>
         <commons-logging.version>1.2</commons-logging.version>
         <docker-client.version>5.0.2</docker-client.version>

@@ -73,7 +73,7 @@ Create a function (Local):
     aws lambda create-function --function-name test1 \
        --runtime java8 \
        --role arn:aws:iam::515292396565:role/lambda_basic_execution \
-       --handler com.digitalsanctum.lambda.samples.HelloPojo \
+       --handler com.digitalsanctum.lambda.functions.Concat \
        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
        --description "test1 description" \
        --timeout 30 \

@@ -257,27 +257,6 @@ public class InMemoryLambdaService implements LambdaService {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    
-    
-    /*try {
-      File tmpLambdaFile = File.createTempFile("lambda-" + System.currentTimeMillis(), ".jar", new File("/tmp"));      
-      WritableByteChannel channel = Channels.newChannel(new FileOutputStream(tmpLambdaFile));
-      int bytesWritten = channel.write(byteBuffer);
-      log.info("wrote {} bytes to {} for function {}", 
-          bytesWritten, tmpLambdaFile.getAbsolutePath(), updateFunctionCodeRequest.getFunctionName());
-      
-      FunctionCode code = new FunctionCode();      
-      code.setZipFile(updateFunctionCodeRequest.getZipFile());      
-      FUNCTION_CODE.put(updateFunctionCodeRequest.getFunctionName(), code);
-      
-      FunctionCodeLocation functionCodeLocation = new FunctionCodeLocation();
-      functionCodeLocation.setLocation(tmpLambdaFile.getAbsolutePath());
-      functionCodeLocation.setRepositoryType("local");
-      FUNCTION_CODE_LOCATION.put(updateFunctionCodeRequest.getFunctionName(), functionCodeLocation);
-
-    } catch (IOException e) {
-      e.printStackTrace();
-    } */
     return result;
   }
 }

@@ -14,7 +14,7 @@ Deploy and invoke AWS Lambda functions locally.
 
 ## build
 
-    mvn clean install
+    ./mvnw clean install
     
 ## Features
 - Deploy Lambda functions locally and invoke them

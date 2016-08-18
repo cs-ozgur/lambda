@@ -17,6 +17,8 @@
         <module>lambda-proxy</module>
         <module>lambda-server</module>
         <module>lambda-server-integration-tests</module>
+        <module>lambda-dynamodb</module>
+        <module>lambda-kinesis</module>
     </modules>
 
     <properties>
@@ -25,7 +27,8 @@
         <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
 
-        <aws-java-sdk-lambda.version>1.11.26</aws-java-sdk-lambda.version>
+        <aws.dynamodblocal.version>1.11.0.1</aws.dynamodblocal.version>
+        <aws-java-sdk.version>1.11.27</aws-java-sdk.version>
         <aws-lambda-java-core.version>1.1.0</aws-lambda-java-core.version>
         <commons-logging.version>1.2</commons-logging.version>
         <docker-client.version>5.0.2</docker-client.version>
@@ -42,6 +45,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>DynamoDBLocal</artifactId>
+                <version>${aws.dynamodblocal.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.digitalsanctum.lambda</groupId>
+                <artifactId>lambda-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
@@ -53,8 +66,13 @@
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-dynamodb</artifactId>
+                <version>${aws-java-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-lambda</artifactId>
-                <version>${aws-java-sdk-lambda.version}</version>
+                <version>${aws-java-sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -123,6 +141,11 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-server</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
@@ -146,6 +169,7 @@
                 <artifactId>jetty-rewrite</artifactId>
                 <version>${jetty.version}</version>
             </dependency>
+            <!-- start docker-client deps -->
             <dependency>
                 <groupId>com.spotify</groupId>
                 <artifactId>docker-client</artifactId>
@@ -178,12 +202,13 @@
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>${jersey.version}</version>
-            </dependency>
+            </dependency>            
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-guava</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <!-- end docker-client deps -->
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
@@ -211,6 +236,14 @@
             </plugin>            
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>dynamodblocal</id>
+            <name>AWS DynamoDB Local Release Repository</name>
+            <url>http://dynamodb-local.s3-website-us-west-2.amazonaws.com/release</url>
+        </repository>
+    </repositories>
 
         
 </project>

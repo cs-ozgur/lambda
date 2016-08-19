@@ -28,7 +28,7 @@
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
 
         <aws.dynamodblocal.version>1.11.0.1</aws.dynamodblocal.version>
-        <aws-java-sdk.version>1.11.27</aws-java-sdk.version>
+        <aws-java-sdk.version>1.11.28</aws-java-sdk.version>
         <aws-lambda-java-core.version>1.1.0</aws-lambda-java-core.version>
         <commons-logging.version>1.2</commons-logging.version>
         <docker-client.version>5.0.2</docker-client.version>
@@ -71,6 +71,11 @@
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-kinesis</artifactId>
+                <version>${aws-java-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-lambda</artifactId>
                 <version>${aws-java-sdk.version}</version>
             </dependency>
@@ -101,7 +106,7 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-format-cbor</artifactId>
+                <artifactId>jackson-dataformat-cbor</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>

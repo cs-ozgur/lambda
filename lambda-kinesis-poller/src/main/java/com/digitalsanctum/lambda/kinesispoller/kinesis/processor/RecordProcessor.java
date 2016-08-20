@@ -3,8 +3,11 @@ package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ThrottlingException;
-import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessor;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorCheckpointer;
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessor;
+import com.amazonaws.services.kinesis.clientlibrary.types.InitializationInput;
+import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput;
+import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownInput;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
 import org.slf4j.Logger;
@@ -12,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.List;
 
 /**
  * @author Shane Witbeck
@@ -27,27 +29,20 @@ public class RecordProcessor implements IRecordProcessor {
   private static final long CHECKPOINT_INTERVAL_MILLIS = 1000L;
   private long nextCheckpointTimeInMillis;
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void initialize(String shardId) {
-    log.info("Initializing record processor for shard: " + shardId);
-    this.kinesisShardId = shardId;
+  public void initialize(InitializationInput initializationInput) {
+    log.info("Initializing record processor for shard: " + initializationInput.getShardId());
+    this.kinesisShardId = initializationInput.getShardId();
     nextCheckpointTimeInMillis = System.currentTimeMillis() + CHECKPOINT_INTERVAL_MILLIS;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void processRecords(List<Record> records, IRecordProcessorCheckpointer checkpointer) {
-
-    records.forEach(this::processRecord);
+  public void processRecords(ProcessRecordsInput processRecordsInput) {
+    processRecordsInput.getRecords().forEach(this::processRecord);
 
     // Checkpoint once every checkpoint interval
     if (System.currentTimeMillis() > nextCheckpointTimeInMillis) {
-      checkpoint(checkpointer);
+      checkpoint(processRecordsInput.getCheckpointer());
       nextCheckpointTimeInMillis = System.currentTimeMillis() + CHECKPOINT_INTERVAL_MILLIS;
     }
   }
@@ -57,20 +52,17 @@ public class RecordProcessor implements IRecordProcessor {
     ByteBuffer bb = record.getData();
     String data = new String(bb.array(), Charset.forName("UTF-8"));
     log.info("<<< received: {}", data);
-    
+
     // TODO send to subscribed event sinks        
 
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public void shutdown(IRecordProcessorCheckpointer checkpointer, ShutdownReason reason) {
+  public void shutdown(ShutdownInput shutdownInput) {
     log.info("Shutting down record processor for shard: " + kinesisShardId);
     // Important to checkpoint after reaching end of shard, so we can start processing data from child shards.
-    if (reason == ShutdownReason.TERMINATE) {
-      checkpoint(checkpointer);
+    if (shutdownInput.getShutdownReason() == ShutdownReason.TERMINATE) {
+      checkpoint(shutdownInput.getCheckpointer());
     }
   }
 
@@ -89,4 +81,11 @@ public class RecordProcessor implements IRecordProcessor {
       log.error("Cannot save checkpoint to the DynamoDB table used by the Amazon Kinesis Client Library.", e);
     }
   }
+
+  
+
+  
+
+  
 }
+

@@ -5,7 +5,6 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
 import com.amazonaws.services.kinesis.model.DescribeStreamResult;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
-import com.amazonaws.services.kinesis.model.PutRecordResult;
 import com.digitalsanctum.dynamodb.DockerDynamoDB;
 import com.digitalsanctum.kinesis.DockerKinesis;
 import com.google.common.base.Charsets;

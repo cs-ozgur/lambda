@@ -18,10 +18,9 @@ import static com.digitalsanctum.lambda.kinesispoller.kinesis.config.Configurati
 
 /**
  * @author Shane Witbeck
- * @since 4/3/16
+ * @since 8/20/16
  */
 public class KclWorker {
-
   private static final Logger log = LoggerFactory.getLogger(KclWorker.class);
 
   private final String workerId;
@@ -41,13 +40,19 @@ public class KclWorker {
 
     AmazonKinesis amazonKinesis = new AmazonKinesisClient(credentialsProvider);
     amazonKinesis.setEndpoint(kclConfig.getKinesisEndpoint());
-    
+
     AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(credentialsProvider);
     dynamoDBClient.setEndpoint(dynamoDbEndpoint);
 
     AmazonCloudWatch amazonCloudWatch = new AmazonCloudWatchClient(credentialsProvider);
 
-    this.worker = new Worker(new RecordProcessorFactory(), kclConfig, amazonKinesis, dynamoDBClient, amazonCloudWatch);
+    this.worker = new Worker.Builder()
+        .recordProcessorFactory(new RecordProcessorFactory())
+        .config(kclConfig)
+        .kinesisClient(amazonKinesis)
+        .dynamoDBClient(dynamoDBClient)
+        .cloudWatchClient(amazonCloudWatch)
+        .build();
   }
 
   public String getWorkerId() {
@@ -58,9 +63,7 @@ public class KclWorker {
     try {
       log.info("starting worker");
       Thread workerThread = new Thread(worker, getWorkerId());
-      workerThread.start();
-//      workerThread.join();
-//      worker.run();      
+      workerThread.start();   
     } catch (Throwable t) {
       log.error("Caught throwable while processing data", t);
     }

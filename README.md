@@ -25,7 +25,7 @@ Deploy and invoke AWS Lambda functions locally.
 ## Road map
 
 - Persist configurations between server restarts.
-- Support for event sources such as AWS DynamoDB and AWS Kinesis Streams.
+- Support for event sources such as AWS DynamoDB and AWS Kinesis Streams (in progress)
 - More examples
 - ?
 

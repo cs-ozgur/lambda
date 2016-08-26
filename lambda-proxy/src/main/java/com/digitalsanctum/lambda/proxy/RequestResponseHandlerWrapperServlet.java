@@ -16,11 +16,11 @@ import java.io.IOException;
  * @author Shane Witbeck
  * @since 8/8/16
  */
-public class HandlerWrapperServlet extends HttpServlet {
+public class RequestResponseHandlerWrapperServlet extends HttpServlet {
 
   private final Executor executor;
 
-  public HandlerWrapperServlet(Executor executor) {
+  public RequestResponseHandlerWrapperServlet(Executor executor) {
     this.executor = executor;
   }
 

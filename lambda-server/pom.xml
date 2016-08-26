@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>lambda-server</artifactId>
-    <name>Server</name>
+    <name>Lambda Server</name>
     <packaging>jar</packaging>
 
     <dependencies>

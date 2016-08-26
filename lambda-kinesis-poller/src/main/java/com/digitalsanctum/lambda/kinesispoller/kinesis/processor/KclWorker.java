@@ -32,6 +32,7 @@ public class KclWorker {
                    AWSCredentialsProvider credentialsProvider) {
 
     this.workerId = streamName + "-worker-" + UUID.randomUUID();
+    log.info("initializing worker {}", this.workerId);
 
     KinesisClientLibConfiguration kclConfig
         = new KinesisClientLibConfiguration(getApplicationName(), streamName, credentialsProvider, this.workerId)
@@ -40,11 +41,14 @@ public class KclWorker {
 
     AmazonKinesis amazonKinesis = new AmazonKinesisClient(credentialsProvider);
     amazonKinesis.setEndpoint(kclConfig.getKinesisEndpoint());
+    log.info("Kinesis client initialized with endpoint {}", kclConfig.getKinesisEndpoint());
 
     AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(credentialsProvider);
     dynamoDBClient.setEndpoint(dynamoDbEndpoint);
+    log.info("DynamoDB client initialized with endpoint {}", dynamoDbEndpoint);
 
     AmazonCloudWatch amazonCloudWatch = new AmazonCloudWatchClient(credentialsProvider);
+    log.info("CloudWatch client initialized");
 
     this.worker = new Worker.Builder()
         .recordProcessorFactory(new RecordProcessorFactory())
@@ -61,16 +65,18 @@ public class KclWorker {
 
   public void start() {
     try {
-      log.info("starting worker");
+      log.info("starting worker {}", workerId);
       Thread workerThread = new Thread(worker, getWorkerId());
       workerThread.start();   
     } catch (Throwable t) {
       log.error("Caught throwable while processing data", t);
     }
-    log.info("exiting");
+    log.info("worker {} started", workerId);
   }
 
   public void stop() {
+    log.info("stopping worker {}", workerId);
     worker.shutdown();
+    log.info("worker {} stopped", workerId);
   }
 }

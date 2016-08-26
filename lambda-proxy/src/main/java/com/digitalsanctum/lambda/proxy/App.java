@@ -18,7 +18,7 @@ public class App {
         sch.setContextPath("/");
 
         Executor executor = new Executor(new Definition(lambdaHandler, lambdaTimeout));
-        HandlerWrapperServlet handlerWrapperServlet = new HandlerWrapperServlet(executor);
+        RequestResponseHandlerWrapperServlet handlerWrapperServlet = new RequestResponseHandlerWrapperServlet(executor);
         ServletHolder holder = new ServletHolder(handlerWrapperServlet);
         sch.addServlet(holder, "/*");
 

@@ -9,6 +9,8 @@ import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ContainerInfo;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.PortBinding;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +22,8 @@ import java.util.Map;
  * @since 8/9/16
  */
 public class DockerContainerService implements ContainerService {
+  
+  private static final Logger log = LoggerFactory.getLogger(DockerContainerService.class);
 
   private final DockerClient dockerClient;
 
@@ -66,7 +70,7 @@ public class DockerContainerService implements ContainerService {
     String hostPort = (info.networkSettings().ports().get("8080/tcp").get(0)).hostPort();    
     String endpoint = "http://localhost:" + hostPort;
 
-    System.out.println("endpoint=" + endpoint);
+    log.info("endpoint=" + endpoint);
 
     RunContainerResult result = new RunContainerResult();
     result.setName(info.name());

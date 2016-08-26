@@ -6,6 +6,9 @@ Deploy and invoke AWS Lambda functions locally.
 **NOTE: This project continues to be a work in progress. Expect breaking changes.**
 
 
+![Component Diagram](etc/images/component_diagram.png?raw=true "Component Diagram")
+
+
 ## Prerequistes
 
 - Java 8

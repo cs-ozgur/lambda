@@ -31,11 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Shane Witbeck
@@ -51,6 +51,9 @@ public class InMemoryLambdaService implements LambdaService {
   private static final Map<String, FunctionCode> FUNCTION_CODE = new HashMap<>();
 
   private static final Map<String, FunctionCodeLocation> FUNCTION_CODE_LOCATION = new HashMap<>();
+  
+  // key = function handler, value = container endpoint
+  private static final Map<String, String> HANDLER_CONTAINER_ENDPOINTS = new HashMap<>();
 
   private final ObjectMapper objectMapper;
 
@@ -101,8 +104,8 @@ public class InMemoryLambdaService implements LambdaService {
                                FunctionConfiguration functionConfiguration,
                                FunctionCodeLocation functionCodeLocation) {
 
-    Definition def = new Definition(functionConfiguration.getHandler(), 30);
-    def.setName(invokeRequest.getFunctionName());
+//    Definition def = new Definition(functionConfiguration.getHandler(), 30);
+//    def.setName(invokeRequest.getFunctionName());
 
     // TODO handling of location based on repository type. for now, assume it's a local file path 
     String location = functionCodeLocation.getLocation();
@@ -110,42 +113,55 @@ public class InMemoryLambdaService implements LambdaService {
     
     // TODO verify a container already exists before creating a new one for each invocation
     
-    RunContainerRequest runContainerRequest = new RunContainerRequest();
-    runContainerRequest.setImageId(location);
-    runContainerRequest.setHandler(functionConfiguration.getHandler());
-
-    RunContainerResult runContainerResult = null;
+    String handler = functionConfiguration.getHandler();
+    String endpoint = null;
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    try {
-
-      // TODO make endpoint configurable
-      HttpPost post = new HttpPost("http://localhost:8082/containers");
-
-      String requestJson = objectMapper.writeValueAsString(runContainerRequest);
-      StringEntity input = new StringEntity(requestJson);
-      post.setEntity(input);
-      input.setContentType("application/json");
-
-      CloseableHttpResponse response = httpClient.execute(post);
-      
-      HttpEntity entity = response.getEntity();
-      String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
-      runContainerResult = objectMapper.readValue(responseJson.getBytes(), RunContainerResult.class);
-      
-    } catch (Exception e) {
-      log.error("Error", e);
-    }
     
-    // call the endpoint
-    String endpoint = runContainerResult.getEndpoint();
+    if (HANDLER_CONTAINER_ENDPOINTS.containsKey(handler)) {
+      endpoint = HANDLER_CONTAINER_ENDPOINTS.get(handler);
+      log.info("found cached endpoint {} for handler {}", endpoint, handler);
+    } else {
+      RunContainerRequest runContainerRequest = new RunContainerRequest();
+      runContainerRequest.setImageId(location);
+      runContainerRequest.setHandler(functionConfiguration.getHandler());
 
-    boolean up = false;
-    log.info("waiting for container to become available");
-    long start = System.currentTimeMillis();
-    while(!up) {
-      up = isEndpointAvailable(httpClient, endpoint, 500);
+      Optional<RunContainerResult> runContainerResult = Optional.empty();
+      try {
+
+        // TODO make endpoint configurable
+        HttpPost post = new HttpPost("http://localhost:8082/containers");
+
+        String requestJson = objectMapper.writeValueAsString(runContainerRequest);
+        StringEntity input = new StringEntity(requestJson);
+        post.setEntity(input);
+        input.setContentType("application/json");
+
+        CloseableHttpResponse response = httpClient.execute(post);
+
+        HttpEntity entity = response.getEntity();
+        String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
+        runContainerResult = Optional.ofNullable(objectMapper.readValue(responseJson.getBytes(), RunContainerResult.class));
+
+        // cache the endpoint
+        if(runContainerResult.isPresent()) {
+          endpoint = runContainerResult.get().getEndpoint();
+          HANDLER_CONTAINER_ENDPOINTS.put(functionConfiguration.getHandler(), endpoint);
+        }
+
+        boolean up = false;
+        log.info("waiting for container to become available");
+        long start = System.currentTimeMillis();
+        while(!up) {
+          up = isEndpointAvailable(httpClient, endpoint, 500);
+        }
+        log.info("Container is available; took {} ms", (System.currentTimeMillis() - start));
+
+      } catch (Exception e) {
+        log.error("Error running container", e);
+      }
     }
-    log.info("Container is available; took {} ms", (System.currentTimeMillis() - start));
+
+    
 
     try {
       ByteBuffer payloadByteBuffer = invokeRequest.getPayload();

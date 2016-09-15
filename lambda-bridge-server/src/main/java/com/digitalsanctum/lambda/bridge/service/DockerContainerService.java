@@ -70,7 +70,7 @@ public class DockerContainerService implements ContainerService {
     String hostPort = (info.networkSettings().ports().get("8080/tcp").get(0)).hostPort();    
     String endpoint = "http://localhost:" + hostPort;
 
-    log.info("endpoint=" + endpoint);
+    log.info("Handler={}, Endpoint={}", runContainerRequest.getHandler(), endpoint);
 
     RunContainerResult result = new RunContainerResult();
     result.setName(info.name());

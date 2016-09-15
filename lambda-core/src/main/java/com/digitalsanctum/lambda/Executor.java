@@ -3,6 +3,7 @@ package com.digitalsanctum.lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.InvocationTargetException;
@@ -14,11 +15,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class Executor implements ResultProvider {
+import static java.util.concurrent.TimeUnit.SECONDS;
 
+public class Executor implements ResultProvider {
+    
     private static final ObjectMapper mapper = new ObjectMapper();
     private final Definition definition;
     private Object result;
@@ -51,11 +53,11 @@ public class Executor implements ResultProvider {
             final Object obj = cls.newInstance();
             final Method method = cls.getDeclaredMethod(this.definition.getHandlerMethod(), selectedMethod.getParameterTypes());
             
-            // TODO deserialize inputJson
-            // TODO get method args and figure out which one is the input (not Context)
-//            mapper.readValue(inputJson, )
+            // TODO determine the request object class (DynamodbEvent, KinesisEvent, etc.)
             
-            invoke(inputJson, obj, method);
+            Object inputObj = mapper.readValue(inputJson, KinesisEvent.class);
+            
+            invoke(inputObj, obj, method);
 
         } else {
             Class cls = Class.forName(this.definition.getHandler());
@@ -73,7 +75,7 @@ public class Executor implements ResultProvider {
         return this;
     }
 
-    public static Map<String, Class> getRequestHandlerTypes(String handler)
+    private static Map<String, Class> getRequestHandlerTypes(String handler)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
         Map<String, Class> types = new HashMap<>();
@@ -99,27 +101,59 @@ public class Executor implements ResultProvider {
         return types;
     }
 
+    @Override
     public Object getResult() {
         return this.result;
     }
 
-    private void invoke(Object input, Object obj, Method method) {
-        final Context context = this.definition.getContext();
-        LambdaLogger logger = context.getLogger();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future future = (Future) executor.submit(() -> {
+    @Override
+    public void setResult(Object result) {
+        this.result = result;
+    }
+
+    private static class FunctionRunnable implements Runnable {
+        
+        private final LambdaLogger logger;        
+        private final Context context;
+        private final Object input;
+        private final Object functionInstance;
+        private final Method functionMethod;
+        private final ResultProvider resultProvider;
+
+        FunctionRunnable(Context context, Object input, Object functionInstance, Method functionMethod, ResultProvider resultProvider) {
+            this.context = context;
+            this.logger = context.getLogger();
+            this.input = input;
+            this.functionInstance = functionInstance;
+            this.functionMethod = functionMethod;
+            this.resultProvider = resultProvider;
+        }
+
+        @Override
+        public void run() {
             try {
-                result = method.invoke(obj, input, context);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                logger.log("Error invoking " + this.definition.getHandler());
+                Object result = functionMethod.invoke(functionInstance, input, context);
+                resultProvider.setResult(result);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                logger.log("Error invoking function");
+                e.printStackTrace();                
             }
-        });
+        }        
+    }
 
+    private void invoke(final Object input, final Object functionInstance, final Method functionMethod) {
+        final Context context = this.definition.getContext();
+        final LambdaLogger logger = context.getLogger();
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        final FunctionRunnable functionRunnable = new FunctionRunnable(context, input, functionInstance, functionMethod, this);
+        Future future = executor.submit(functionRunnable);
+        
         int timeout = this.definition.getTimeout();
-
-        logger.log("START request: " + context.getAwsRequestId());
+        
+        // start mimic of Amazon Lambda invocation behavior
+        logger.log("START request: " + context.getAwsRequestId());        
         try {
-            future.get(timeout, TimeUnit.SECONDS);
+            future.get(timeout, SECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
             logger.log("<< TIMED OUT >>");
@@ -128,11 +162,18 @@ public class Executor implements ResultProvider {
             future.cancel(true);
             logger.log("<< EXCEPTION >>");
             e.printStackTrace();
+        } finally {
+            executor.shutdownNow();
         }
-
-        executor.shutdownNow();
-
         logger.log("END request: " + context.getAwsRequestId());
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Executor{");
+        sb.append("definition=").append(definition);
+        sb.append(", result=").append(result);
+        sb.append('}');
+        return sb.toString();
+    }
 }

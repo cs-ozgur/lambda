@@ -21,7 +21,7 @@ class BaseTest {
 
   static final String TEST_FUNCTION_NAME = "concat";
 
-  AWSLambda awsLambda;
+  protected AWSLambda awsLambda;
 
   String getTestRequest() throws JsonProcessingException {
     ConcatRequest testRequest = new ConcatRequest();

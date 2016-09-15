@@ -41,14 +41,14 @@ public class LocalFunctionTest extends LocalBaseTest {
   
   private static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
   private static final String TEST_RUNTIME = "java8";
-  private static final String TEST_HANDLER = "com.digitalsanctum.lambda.functions.Concat";
+  private static final String TEST_HANDLER = "com.digitalsanctum.lambda.functions.requestresponse.Concat";
   private static final String TEST_ARN = "arn:aws:lambda:local:111000111000:function:" + TEST_FUNCTION_NAME;
   private static final int TEST_TIMEOUT = 30;
 
   @Test
   public void testHealthcheck() throws Exception {
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    HttpGet request = new HttpGet(ENDPOINT + "/healthcheck"); 
+    HttpGet request = new HttpGet(LAMBDA_SERVER_ENDPOINT + "/healthcheck"); 
     HttpResponse response = httpClient.execute(request);
     assertEquals(200, response.getStatusLine().getStatusCode());
   }

@@ -6,6 +6,8 @@ import com.digitalsanctum.lambda.server.filter.AWSFilter;
 import com.digitalsanctum.lambda.server.resource.EventSourceMappingResource;
 import com.digitalsanctum.lambda.server.resource.FunctionResource;
 import com.digitalsanctum.lambda.server.resource.HealthcheckResource;
+import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
+import com.digitalsanctum.lambda.server.service.InMemoryEventSourceMappingService;
 import com.digitalsanctum.lambda.server.service.InMemoryLambdaService;
 import com.digitalsanctum.lambda.server.service.LambdaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +55,8 @@ public class LambdaServer {
     // resources
     final ObjectMapper mapper = new ObjectMapper();
     LambdaService lambdaService = new InMemoryLambdaService(mapper);
-    EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(lambdaService);
+    EventSourceMappingService eventSourceMappingService = new InMemoryEventSourceMappingService();
+    EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(eventSourceMappingService, lambdaService);
     FunctionResource functionResource = new FunctionResource(lambdaService);
     rc.register(eventSourceMappingResource);
     rc.register(functionResource);

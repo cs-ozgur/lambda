@@ -55,4 +55,14 @@ public class Definition {
     public String getHandlerMethod() {
         return this.handler.split("::")[1];
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Definition{");
+        sb.append("handler='").append(handler).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", timeout=").append(timeout);
+        sb.append('}');
+        return sb.toString();
+    }
 }

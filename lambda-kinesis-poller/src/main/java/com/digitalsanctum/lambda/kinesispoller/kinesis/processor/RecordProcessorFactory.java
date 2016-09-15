@@ -9,13 +9,16 @@ import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcess
  * @since 4/3/16
  */
 public class RecordProcessorFactory implements IRecordProcessorFactory {
+  
+  private String lambdaServerEndpoint;
 
-  public RecordProcessorFactory() {
+  public RecordProcessorFactory(String lambdaServerEndpoint) {
     super();
+    this.lambdaServerEndpoint = lambdaServerEndpoint;
   }
 
   @Override
   public IRecordProcessor createProcessor() {
-    return new RecordProcessor();
+    return new RecordProcessor(this.lambdaServerEndpoint);
   }
 }

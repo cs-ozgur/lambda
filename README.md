@@ -14,6 +14,7 @@ Deploy and invoke AWS Lambda functions locally.
 - Java 8
 - Maven
 - Docker engine
+- etcd
 
 ## build
 
@@ -32,6 +33,21 @@ Deploy and invoke AWS Lambda functions locally.
 - More examples
 - ?
 
+## etcd
+
+etcd is used for service discovery. Start it with the following:
+
+    docker run \
+      -d \
+      -p 2379:2379 \
+      -p 2380:2380 \
+      -p 4001:4001 \
+      -p 7001:7001 \
+      -v /path/to/data/dir:/data \
+      --name etcd0 \
+      elcolio/etcd:latest \
+      -name etcd0
+
 ## lambda-bridge-server
 
 Serves as a proxy between lambda-server and Docker engine. Responsible for building Docker images that wrap Lambda functions 
@@ -46,6 +62,9 @@ A standalone server that implements the following AWS Lambda endpoints:
 - GetFunction
 - Invoke
 - ListFunctions
+
+- CreateEventSourceMapping
+- ListEventSourceMappings
 
 You can use the AWS CLI and AWS Java SDK to operate like you normally would with real AWS endpoints.
 
@@ -76,7 +95,7 @@ Create a function (Local):
     aws lambda create-function --function-name test1 \
        --runtime java8 \
        --role arn:aws:iam::515292396565:role/lambda_basic_execution \
-       --handler com.digitalsanctum.lambda.functions.Concat \
+       --handler com.digitalsanctum.lambda.functions.requestresponse.Concat \
        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
        --description "test1 description" \
        --timeout 30 \
@@ -104,6 +123,20 @@ Delete a function:
 Confirm the deletion by listing functions again:
 
     aws lambda list-functions --profile local --endpoint-url http://localhost:8080   
+    
+    
+List event source mappings:
+    
+    aws lambda list-event-source-mappings --endpoint-url http://localhost:8080
+    
+    
+Create an event source mapping:
+                          
+    aws lambda create-event-source-mapping --event-source-arn arn:aws:kinesis:local:111111111111:stream/foo \
+        --function-name test1 \
+        --starting-position TRIM_HORIZON \
+        --endpoint-url http://localhost:8080
+    
     
 ### AWS Java SDK
     

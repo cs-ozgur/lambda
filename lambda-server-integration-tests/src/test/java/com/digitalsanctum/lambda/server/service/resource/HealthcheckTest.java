@@ -17,7 +17,7 @@ public class HealthcheckTest extends LocalBaseTest {
   @Test
   public void testHealthcheck() throws Exception {
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    HttpGet request = new HttpGet(ENDPOINT + "/healthcheck");
+    HttpGet request = new HttpGet(LAMBDA_SERVER_ENDPOINT + "/healthcheck");
     HttpResponse response = httpClient.execute(request);
     assertEquals(200, response.getStatusLine().getStatusCode());
   }

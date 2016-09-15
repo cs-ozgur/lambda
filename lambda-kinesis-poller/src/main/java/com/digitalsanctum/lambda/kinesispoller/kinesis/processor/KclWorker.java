@@ -29,6 +29,7 @@ public class KclWorker {
   public KclWorker(String streamName,
                    String kinesisEndpoint,
                    String dynamoDbEndpoint,
+                   String lambdaServerEndpoint,
                    AWSCredentialsProvider credentialsProvider) {
 
     this.workerId = streamName + "-worker-" + UUID.randomUUID();
@@ -51,7 +52,7 @@ public class KclWorker {
     log.info("CloudWatch client initialized");
 
     this.worker = new Worker.Builder()
-        .recordProcessorFactory(new RecordProcessorFactory())
+        .recordProcessorFactory(new RecordProcessorFactory(lambdaServerEndpoint))
         .config(kclConfig)
         .kinesisClient(amazonKinesis)
         .dynamoDBClient(dynamoDBClient)

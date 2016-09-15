@@ -10,6 +10,16 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownInput;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason;
 import com.amazonaws.services.kinesis.model.Record;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClient;
+import com.amazonaws.services.lambda.model.InvocationType;
+import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
+import com.amazonaws.services.lambda.model.LogType;
+import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +31,20 @@ import java.nio.charset.Charset;
  * @since 4/3/16
  */
 public class RecordProcessor implements IRecordProcessor {
-
+  
   private static final Logger log = LoggerFactory.getLogger(RecordProcessor.class);
+  
+  private static final ObjectMapper mapper = new ObjectMapper();
+  
   private String kinesisShardId;
+  private final String lambdaServerEndpoint;
 
-  // Checkpointing interval
+  public RecordProcessor(String lambdaServerEndpoint) {
+    this.lambdaServerEndpoint = lambdaServerEndpoint;
+    log.info("Instantiated RecordProcessor with lambda endpoint: {}", lambdaServerEndpoint);
+  }
+
+  // Check pointing interval
   private static final long CHECKPOINT_INTERVAL_MILLIS = 1000L;
   private long nextCheckpointTimeInMillis;
 
@@ -54,7 +73,43 @@ public class RecordProcessor implements IRecordProcessor {
     log.info("<<< received: {}", data);
 
     // TODO send to subscribed event sinks        
+    try {
+      invokeLambda(bb);
+    } catch (JsonProcessingException e) {
+      log.error("Error invoking lambda", e);
+    }
+  }
 
+  String getTestKinesisEvent(ByteBuffer toSend) throws JsonProcessingException {
+    KinesisEvent event = new KinesisEvent();
+
+    KinesisEvent.KinesisEventRecord record = new KinesisEvent.KinesisEventRecord();
+    record.setEventID("id");
+    record.setEventName("eventname");
+    
+    KinesisEvent.Record kinesis = new KinesisEvent.Record();
+    kinesis.setPartitionKey(String.valueOf(System.currentTimeMillis()));
+    kinesis.setSequenceNumber(String.valueOf(System.currentTimeMillis()));
+    kinesis.setData(toSend);
+    record.setKinesis(kinesis);
+    
+    event.setRecords(ImmutableList.of(record));
+    
+    return new String(mapper.writeValueAsBytes(event));
+  }
+
+  private void invokeLambda(ByteBuffer byteBuffer) throws JsonProcessingException {
+    String testRequestJson = getTestKinesisEvent(byteBuffer);
+
+    InvokeRequest invokeRequest = new InvokeRequest();
+    invokeRequest.setInvocationType(InvocationType.Event);
+    invokeRequest.setPayload(testRequestJson);
+    invokeRequest.setLogType(LogType.Tail);
+    invokeRequest.setFunctionName("basic-kinesis");
+
+    AWSLambda awsLambda = new AWSLambdaClient().withEndpoint(lambdaServerEndpoint); 
+    InvokeResult result = awsLambda.invoke(invokeRequest);
+    System.out.println(result);
   }
 
   @Override

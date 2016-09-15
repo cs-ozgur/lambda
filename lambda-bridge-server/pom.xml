@@ -44,6 +44,11 @@
             <artifactId>lambda-model</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.digitalsanctum.lambda</groupId>
+            <artifactId>lambda-proxy</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

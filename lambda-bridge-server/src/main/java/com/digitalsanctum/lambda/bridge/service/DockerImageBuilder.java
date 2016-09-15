@@ -5,6 +5,7 @@ import com.digitalsanctum.lambda.model.CreateImageResult;
 import com.google.common.io.Files;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.DockerRequestException;
 import com.spotify.docker.client.messages.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
 
     // copy lambda.jar to tmp dir
     Path file = tmpDir.toPath().resolve("lambda.jar");
-    FileChannel wChannel = null;
+    FileChannel wChannel;
     try {
       wChannel = new FileOutputStream(file.toFile(), false).getChannel();
       wChannel.write(createImageRequest.getLambdaJar());
@@ -91,7 +92,7 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
     try {
       id = dockerClient.build(tmpDir.toPath(), createImageRequest.getImageName());
     } catch (DockerException de) {
-      log.error("Error creating Docker image '{}'", createImageRequest.getImageName(), de);
+      log.error("Error creating Docker image '{}'. Error: {}", createImageRequest.getImageName(), de.getMessage(), de);
     } catch (InterruptedException | IOException e) {
       e.printStackTrace();
     }

@@ -66,7 +66,7 @@ public class KclWorkerTest {
     assertThat(describeStreamResult.getStreamDescription().getStreamName(), is(TEST_STREAM));
 
     log.info("starting KCL worker");
-    kclWorker = new KclWorker(TEST_STREAM, kinesisEndpoint, dynamoDbEndpoint, new DefaultAWSCredentialsProviderChain());
+    kclWorker = new KclWorker(TEST_STREAM, kinesisEndpoint, dynamoDbEndpoint, null, new DefaultAWSCredentialsProviderChain());
     kclWorker.start();
 
     // make sure to kill containers

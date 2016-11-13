@@ -33,20 +33,6 @@ Deploy and invoke AWS Lambda functions locally.
 - More examples
 - ?
 
-## etcd
-
-etcd is used for service discovery. Start it with the following:
-
-    docker run \
-      -d \
-      -p 2379:2379 \
-      -p 2380:2380 \
-      -p 4001:4001 \
-      -p 7001:7001 \
-      -v /path/to/data/dir:/data \
-      --name etcd0 \
-      elcolio/etcd:latest \
-      -name etcd0
 
 ## lambda-bridge-server
 

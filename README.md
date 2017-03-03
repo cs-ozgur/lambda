@@ -61,9 +61,9 @@ Start lambda-bridge-server:
     cd lambda-bridge-server/target    
     java -jar lambda-bridge-server-1.0-SNAPSHOT.jar
 
-Start lambda-server:
+In a separate terminal window, start lambda-server:
 
-    cd lambda-servet/target    
+    cd lambda-server/target    
     java -jar lambda-server-1.0-SNAPSHOT.jar 
    
 will start the server on port 8080 by default. Or provide the port to run on:
@@ -78,6 +78,7 @@ List functions (Local):
        
 Create a function (Local):       
        
+    cd <LAMBDA_PROJECT_ROOT>       
     aws lambda create-function --function-name test1 \
        --runtime java8 \
        --role arn:aws:iam::515292396565:role/lambda_basic_execution \

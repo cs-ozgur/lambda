@@ -10,6 +10,7 @@ import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
 import com.digitalsanctum.lambda.server.service.InMemoryEventSourceMappingService;
 import com.digitalsanctum.lambda.server.service.InMemoryLambdaService;
 import com.digitalsanctum.lambda.server.service.LambdaService;
+import com.digitalsanctum.lambda.server.service.LocalFileLambdaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -54,7 +55,8 @@ public class LambdaServer {
 
     // resources
     final ObjectMapper mapper = new ObjectMapper();
-    LambdaService lambdaService = new InMemoryLambdaService(mapper);
+//    LambdaService lambdaService = new InMemoryLambdaService(mapper);
+    LambdaService lambdaService = new LocalFileLambdaService(mapper);
     EventSourceMappingService eventSourceMappingService = new InMemoryEventSourceMappingService();
     EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(eventSourceMappingService, lambdaService);
     FunctionResource functionResource = new FunctionResource(lambdaService);

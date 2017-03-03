@@ -14,7 +14,6 @@ Deploy and invoke AWS Lambda functions locally.
 - Java 8
 - Maven
 - Docker engine
-- etcd
 
 ## build
 

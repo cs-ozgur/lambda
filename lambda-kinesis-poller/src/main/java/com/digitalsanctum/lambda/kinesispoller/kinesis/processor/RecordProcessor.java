@@ -1,5 +1,6 @@
 package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ThrottlingException;
@@ -11,7 +12,7 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ProcessRecordsInput;
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownInput;
 import com.amazonaws.services.kinesis.model.Record;
 import com.amazonaws.services.lambda.AWSLambda;
-import com.amazonaws.services.lambda.AWSLambdaClient;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.model.InvocationType;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
@@ -80,7 +81,7 @@ public class RecordProcessor implements IRecordProcessor {
     }
   }
 
-  String getTestKinesisEvent(ByteBuffer toSend) throws JsonProcessingException {
+  private String getTestKinesisEvent(ByteBuffer toSend) throws JsonProcessingException {
     KinesisEvent event = new KinesisEvent();
 
     KinesisEvent.KinesisEventRecord record = new KinesisEvent.KinesisEventRecord();
@@ -107,7 +108,10 @@ public class RecordProcessor implements IRecordProcessor {
     invokeRequest.setLogType(LogType.Tail);
     invokeRequest.setFunctionName("basic-kinesis");
 
-    AWSLambda awsLambda = new AWSLambdaClient().withEndpoint(lambdaServerEndpoint); 
+    AwsClientBuilder.EndpointConfiguration endpointConfiguration
+        = new AwsClientBuilder.EndpointConfiguration(lambdaServerEndpoint, "local");
+    AWSLambda awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
+    
     InvokeResult result = awsLambda.invoke(invokeRequest);
     System.out.println(result);
   }

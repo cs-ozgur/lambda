@@ -2,4 +2,5 @@
 import
 export
 **/*.iml
+**/*.jar
 **/target

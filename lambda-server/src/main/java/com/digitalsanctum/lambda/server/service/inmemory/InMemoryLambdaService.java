@@ -1,11 +1,10 @@
-package com.digitalsanctum.lambda.server.service;
+package com.digitalsanctum.lambda.server.service.inmemory;
 
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.FunctionCodeLocation;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
-import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
@@ -13,14 +12,12 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResult;
-import com.digitalsanctum.lambda.model.RunContainerRequest;
-import com.digitalsanctum.lambda.model.RunContainerResult;
+import com.digitalsanctum.lambda.server.service.LambdaService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -32,11 +29,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.digitalsanctum.lambda.server.util.ArnUtils.functionArn;
 
 /**
+ * An in-memory implementation functionArn LambdaService.
+ *
  * @author Shane Witbeck
  * @since 7/19/16
  */
@@ -44,21 +44,14 @@ public class InMemoryLambdaService implements LambdaService {
 
   private static final Logger log = LoggerFactory.getLogger(InMemoryLambdaService.class);
 
-  private static final Map<String, FunctionConfiguration> FUNCTIONS = new HashMap<>();
+  private static final Map<String, FunctionConfiguration> FUNCTIONS = new ConcurrentHashMap<>();
 
-  // TODO for now, we're just going to key off of FunctionName. AWS supports FunctionName and ARN
-  private static final Map<String, FunctionCode> FUNCTION_CODE = new HashMap<>();
+  // TODO for now, we're just going to key off functionArn FunctionName. AWS supports FunctionName and ARN
+  private static final Map<String, FunctionCode> FUNCTION_CODE = new ConcurrentHashMap<>();
 
-  private static final Map<String, FunctionCodeLocation> FUNCTION_CODE_LOCATION = new HashMap<>();
-  
-  // key = function handler, value = container endpoint
-  private static final Map<String, String> HANDLER_CONTAINER_ENDPOINTS = new HashMap<>();
+  private static final Map<String, FunctionCodeLocation> FUNCTION_CODE_LOCATION = new ConcurrentHashMap<>();
 
-  private final ObjectMapper objectMapper;
-
-  public InMemoryLambdaService(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override
   public GetFunctionResult getFunction(String functionName) {
@@ -99,114 +92,10 @@ public class InMemoryLambdaService implements LambdaService {
   }
 
   @Override
-  public Object invokeFunction(InvokeRequest invokeRequest,
-                               FunctionConfiguration functionConfiguration,
-                               FunctionCodeLocation functionCodeLocation) {
-
-//    Definition def = new Definition(functionConfiguration.getHandler(), 30);
-//    def.setName(invokeRequest.getFunctionName());
-
-    // TODO handling of location based on repository type. for now, assume it's a local file path 
-    String location = functionCodeLocation.getLocation();
-    
-    
-    // TODO verify a container already exists before creating a new one for each invocation
-    
-    String handler = functionConfiguration.getHandler();
-    String endpoint = null;
-    CloseableHttpClient httpClient = HttpClients.createDefault();
-    
-    if (HANDLER_CONTAINER_ENDPOINTS.containsKey(handler)) {
-      endpoint = HANDLER_CONTAINER_ENDPOINTS.get(handler);
-      log.info("found cached endpoint {} for handler {}", endpoint, handler);
-    } else {
-      RunContainerRequest runContainerRequest = new RunContainerRequest();
-      runContainerRequest.setImageId(location);
-      runContainerRequest.setHandler(functionConfiguration.getHandler());
-
-      Optional<RunContainerResult> runContainerResult = Optional.empty();
-      try {
-
-        // TODO make endpoint configurable
-        HttpPost post = new HttpPost("http://localhost:8082/containers");
-
-        String requestJson = objectMapper.writeValueAsString(runContainerRequest);
-        StringEntity input = new StringEntity(requestJson);
-        post.setEntity(input);
-        input.setContentType("application/json");
-
-        CloseableHttpResponse response = httpClient.execute(post);
-
-        HttpEntity entity = response.getEntity();
-        String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
-        runContainerResult = Optional.ofNullable(objectMapper.readValue(responseJson.getBytes(), RunContainerResult.class));
-
-        // cache the endpoint
-        if(runContainerResult.isPresent()) {
-          endpoint = runContainerResult.get().getEndpoint();
-          HANDLER_CONTAINER_ENDPOINTS.put(functionConfiguration.getHandler(), endpoint);
-        }
-
-        boolean up = false;
-        log.info("waiting for container to become available");
-        long start = System.currentTimeMillis();
-        while(!up) {
-          up = isEndpointAvailable(httpClient, endpoint, 500);
-        }
-        log.info("Container is available; took {} ms", (System.currentTimeMillis() - start));
-
-      } catch (Exception e) {
-        log.error("Error running container", e);
-      }
-    }
-
-    
-
-    try {
-      ByteBuffer payloadByteBuffer = invokeRequest.getPayload();
-      String payload = new String(payloadByteBuffer.array());
-
-      HttpPost post = new HttpPost(endpoint);
-      StringEntity input = new StringEntity(payload);
-      post.setEntity(input);
-      input.setContentType("application/json");
-
-      CloseableHttpResponse response = httpClient.execute(post);
-
-      HttpEntity entity = response.getEntity();
-      String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
-      
-      return responseJson;
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-  
-  private boolean isEndpointAvailable(CloseableHttpClient httpclient, String endpoint, int sleepPeriod) {
-    try {
-      HttpGet healthCheck = new HttpGet(endpoint);
-      CloseableHttpResponse response = httpclient.execute(healthCheck);
-      if (response.getStatusLine().getStatusCode() == 200) {
-        return true;
-      }
-    } catch (Exception e) {
-      try {
-        Thread.sleep(sleepPeriod);
-      } catch (InterruptedException e1) {
-        // noop
-      }
-    }
-    return false;
-  }
-  
-
-  @Override
   public UpdateFunctionConfigurationResult updateFunctionConfiguration(UpdateFunctionConfigurationRequest request) {
     FunctionConfiguration fc = new FunctionConfiguration();
     fc.setFunctionName(request.getFunctionName());
-    fc.setFunctionArn(ArnUtils.of(request.getFunctionName()));
+    fc.setFunctionArn(functionArn(request.getFunctionName()));
     fc.setHandler(request.getHandler());
     fc.setRuntime(request.getRuntime());
     fc.setDescription(request.getDescription());
@@ -231,15 +120,15 @@ public class InMemoryLambdaService implements LambdaService {
 
     UpdateFunctionCodeResult result = new UpdateFunctionCodeResult();
     result.setFunctionName(updateFunctionCodeRequest.getFunctionName());
-    result.setFunctionArn(ArnUtils.of(updateFunctionCodeRequest.getFunctionName()));
+    result.setFunctionArn(functionArn(updateFunctionCodeRequest.getFunctionName()));
 
     // TODO more setters  
 
     CloseableHttpClient httpclient = HttpClients.createDefault();
-    
+
     // TODO make endpoint configurable
     HttpPost post = new HttpPost("http://localhost:" + 8082 + "/images");
-    
+
     try {
 
       CreateImageRequest request = new CreateImageRequest();
@@ -254,7 +143,7 @@ public class InMemoryLambdaService implements LambdaService {
       input.setContentType("application/json");
 
       CloseableHttpResponse response = httpclient.execute(post);
-      
+
       HttpEntity entity = response.getEntity();
 
       String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);

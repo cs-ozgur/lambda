@@ -35,7 +35,7 @@ import java.util.UUID;
 import static com.amazonaws.http.HttpResponseHandler.X_AMZN_REQUEST_ID_HEADER;
 
 /**
- * Endpoints for storing and invoking Lambda functions outside of AWS.
+ * Endpoints for storing and invoking Lambda functions outside functionArn AWS.
  *
  * @author Shane Witbeck
  * @since 4/24/16
@@ -75,7 +75,7 @@ public class FunctionResource {
   }
 
   /**
-   * Implementation of http://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html
+   * Implementation functionArn http://docs.aws.amazon.com/lambda/latest/dg/API_CreateFunction.html
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -87,7 +87,7 @@ public class FunctionResource {
     
     FunctionConfiguration fc = new FunctionConfiguration();
     fc.setFunctionName(request.getFunctionName());
-    fc.setFunctionArn(ArnUtils.of(request.getFunctionName()));
+    fc.setFunctionArn(ArnUtils.functionArn(request.getFunctionName()));
     fc.setRuntime(request.getRuntime());
     fc.setHandler(request.getHandler());
 
@@ -227,7 +227,7 @@ public class FunctionResource {
   private void verifyFunctionExists(String functionName,
                                     GetFunctionResult getFunctionResult) {
     if (getFunctionResult == null) {
-      ResourceNotFoundException e = new ResourceNotFoundException("Function not found: " + ArnUtils.of(functionName));
+      ResourceNotFoundException e = new ResourceNotFoundException("Function not found: " + ArnUtils.functionArn(functionName));
       e.setErrorCode("ResourceNotFoundException");
       e.setServiceName("AWSLambda");
       e.setStatusCode(Response.Status.NOT_FOUND.getStatusCode());

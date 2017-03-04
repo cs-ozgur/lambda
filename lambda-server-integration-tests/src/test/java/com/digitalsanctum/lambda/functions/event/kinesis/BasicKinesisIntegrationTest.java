@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.server.resource;
+package com.digitalsanctum.lambda.functions.event.kinesis;
 
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
@@ -6,9 +6,11 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.util.IOUtils;
 import com.digitalsanctum.lambda.server.LocalBaseTest;
+import com.digitalsanctum.lambda.server.resource.LocalFunctionResourceTest;
 import com.google.common.base.Charsets;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,49 +23,45 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Shane Witbeck
- * @since 9/10/16
+ * @since 3/3/17
  */
-public class EventSourceMappingRoundTripTest extends LocalBaseTest {
-  
-  private static final Logger log = LoggerFactory.getLogger(EventSourceMappingRoundTripTest.class);
+public class BasicKinesisIntegrationTest extends LocalBaseTest {
+
+  private static final Logger log = LoggerFactory.getLogger(BasicKinesisIntegrationTest.class);
 
   private static final String TEST_KINESIS_FUNCTION_NAME = "basic-kinesis";
-  
+
   private static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
   private static final String TEST_RUNTIME = "java8";
   private static final String TEST_HANDLER = "com.digitalsanctum.lambda.functions.event.kinesis.BasicKinesis::handler";
   private static final String TEST_ARN = "arn:aws:lambda:local:111000111000:function:" + TEST_KINESIS_FUNCTION_NAME;
   private static final int TEST_TIMEOUT = 30;
-  
-  
-  
+
+
+
   @Before
   public void setup() throws Exception {
     super.setup();
     log.info("setup");
   }
-  
+
   @After
   public void tearDown() throws Exception {
     log.info("tearDown");
   }
-  
-  @Test
-  public void testRoundTrip() throws Exception {
-    
-    log.info("testRoundTrip");
-    
-    // todo setup lambda   
-    createFunction(); 
-    
-    
-    // todo setup event source mapping
-    // todo send events to kinesis stream
 
-    log.info("workerId={}", kclWorker.getWorkerId());
+  @Test
+  @Ignore("finish me")  
+  public void testRoundTrip() throws Exception {
+
+    log.info("testRoundTrip");
+
+    createFunction();
+
+    // TODO setup event source mapping
+    // TODO send events to kinesis stream
 
     int index = 1;
-
     while (index < 20) {
       String testRecord = "Test Record " + index;
       ByteBuffer data = ByteBuffer.wrap(testRecord.getBytes(Charsets.UTF_8));
@@ -74,14 +72,22 @@ public class EventSourceMappingRoundTripTest extends LocalBaseTest {
           .withData(data);
 
       log.info(">>> sending: {}", testRecord);
-      amazonKinesisClient.putRecord(putRecordRequest);
-      Thread.sleep(2000);
+      amazonKinesis.putRecord(putRecordRequest);
+      Thread.sleep(100);
       index++;
     }
-    
-    // todo watch for receiving of events in lambda
-    
+
+    // TODO watch for receiving functionArn events in lambda
+
   }
+  
+  /*private void createEventSourceMapping() throws Exception {
+    CreateEventSourceMappingRequest createEventSourceMappingRequest = new CreateEventSourceMappingRequest()
+        .withEventSourceArn()
+        .withBatchSize(10)
+        .withEnabled(Boolean.TRUE)
+        .withFunctionName(TEST_KINESIS_FUNCTION_NAME);
+  }*/
 
   private void createFunction() throws Exception {
 
@@ -103,5 +109,4 @@ public class EventSourceMappingRoundTripTest extends LocalBaseTest {
     assertEquals(TEST_KINESIS_FUNCTION_NAME, result.getFunctionName());
     assertEquals(TEST_ARN, result.getFunctionArn());
   }
-  
 }

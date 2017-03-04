@@ -126,8 +126,14 @@ Create an event source mapping:
     
 ### AWS Java SDK
     
-    new AWSLambdaClient()
-        .withEndpoint("http://localhost:8080)
-        .listFunctions(new ListFunctionsRequest().withMaxItems(10));
+Instantiating an AWS Lambda client to work with local functions:    
+    
+    AWSLambda awsLambda = AwsClientBuilder.EndpointConfiguration endpointConfiguration 
+            = new AwsClientBuilder.EndpointConfiguration("http://localhost:8080", "local");
+            
+    awsLambda = AWSLambdaClientBuilder.standard()
+        .withEndpointConfiguration(endpointConfiguration)
+        .build();
+    
         
         

@@ -14,14 +14,15 @@ import com.amazonaws.services.lambda.model.ListFunctionsResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.util.IOUtils;
+import com.digitalsanctum.lambda.functions.model.ConcatRequest;
 import com.digitalsanctum.lambda.server.LocalBaseTest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -40,7 +41,8 @@ import static org.junit.Assert.assertNotNull;
 public class LocalFunctionResourceTest extends LocalBaseTest {
 
   private static final ObjectMapper mapper = new ObjectMapper();
-  
+
+  private static final String TEST_FUNCTION_NAME = "concat";
   private static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
   private static final String TEST_RUNTIME = "java8";
   private static final String TEST_HANDLER = "com.digitalsanctum.lambda.functions.requestresponse.Concat";
@@ -74,7 +76,6 @@ public class LocalFunctionResourceTest extends LocalBaseTest {
   }
 
   @Test(expected = ResourceNotFoundException.class)
-  @Ignore("fix me")
   public void testDeleteFunctionRequestNotFound() throws Exception {
 
     DeleteFunctionRequest req = new DeleteFunctionRequest();
@@ -155,7 +156,7 @@ public class LocalFunctionResourceTest extends LocalBaseTest {
    * http://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
    */
   @Test
-  @Ignore("LocalFileLambdaService.invokeFunction still needs to be implemented")
+//  @Ignore("LocalFileLambdaService.invokeFunction still needs to be implemented")
   public void testInvokeRequest_RequestResponse() throws Exception {    
     createFunction();    
     invoke_RequestResponse();
@@ -180,5 +181,25 @@ public class LocalFunctionResourceTest extends LocalBaseTest {
     assertNotNull(result);
     assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());
     assertEquals(TEST_ARN, result.getFunctionArn());
+  }
+
+  private void invoke_RequestResponse() throws JsonProcessingException {
+    String testRequestJson = getTestRequest();
+
+    InvokeRequest invokeRequest = new InvokeRequest();
+    invokeRequest.setPayload(testRequestJson);
+    invokeRequest.setFunctionName(TEST_FUNCTION_NAME);
+
+    InvokeResult invokeResult = awsLambda.invoke(invokeRequest);
+    ByteBuffer byteBuffer = invokeResult.getPayload();
+    String resultPayloadJson = new String(byteBuffer.array());
+    assertEquals("{\"message\":\"Shane Witbeck\"}", resultPayloadJson);
+  }
+
+  private String getTestRequest() throws JsonProcessingException {
+    ConcatRequest testRequest = new ConcatRequest();
+    testRequest.setFirstName("Shane");
+    testRequest.setLastName("Witbeck");
+    return new String(mapper.writeValueAsBytes(testRequest));
   }
 }

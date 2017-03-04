@@ -20,5 +20,5 @@ public interface EventSourceMappingService {
 
   CreateEventSourceMappingResult createEventSourceMapping(CreateEventSourceMappingRequest createEventSourceMappingRequest);
 
-  EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, int batchSize, boolean enabled, String functionName);
+  EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, int batchSize, String state);
 }

@@ -7,10 +7,9 @@ import com.digitalsanctum.lambda.server.resource.EventSourceMappingResource;
 import com.digitalsanctum.lambda.server.resource.FunctionResource;
 import com.digitalsanctum.lambda.server.resource.HealthcheckResource;
 import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
-import com.digitalsanctum.lambda.server.service.InMemoryEventSourceMappingService;
-import com.digitalsanctum.lambda.server.service.InMemoryLambdaService;
+import com.digitalsanctum.lambda.server.service.inmemory.InMemoryEventSourceMappingService;
+import com.digitalsanctum.lambda.server.service.inmemory.InMemoryLambdaService;
 import com.digitalsanctum.lambda.server.service.LambdaService;
-import com.digitalsanctum.lambda.server.service.LocalFileLambdaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -28,6 +27,8 @@ import javax.servlet.DispatcherType;
 import java.util.Arrays;
 import java.util.EnumSet;
 
+import static java.util.EnumSet.copyOf;
+
 /**
  * @author Shane Witbeck
  * @since 4/24/16
@@ -39,9 +40,20 @@ public class LambdaServer {
   private Server server;
   private int port;
   private boolean running = false;
+  private final EventSourceMappingService eventSourceMappingService;
+  private final LambdaService lambdaService;
 
-  public LambdaServer(int port) {
+  public LambdaServer(int port) {    
+    this(port, new InMemoryLambdaService(), new InMemoryEventSourceMappingService());
+  }
+
+  public LambdaServer(int port, 
+                      LambdaService lambdaService,
+                      EventSourceMappingService eventSourceMappingService) {
     this.port = port;
+    this.lambdaService = lambdaService;
+    this.eventSourceMappingService = eventSourceMappingService;
+    
     ResourceConfig rc = new ResourceConfig();
 
     // create custom ObjectMapper for AWS SDK
@@ -53,11 +65,7 @@ public class LambdaServer {
     provider.setMapper(awsSdkObjectMapper);
     rc.register(provider);
 
-    // resources
-    final ObjectMapper mapper = new ObjectMapper();
-//    LambdaService lambdaService = new InMemoryLambdaService(mapper);
-    LambdaService lambdaService = new LocalFileLambdaService(mapper);
-    EventSourceMappingService eventSourceMappingService = new InMemoryEventSourceMappingService();
+    // resources    
     EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(eventSourceMappingService, lambdaService);
     FunctionResource functionResource = new FunctionResource(lambdaService);
     rc.register(eventSourceMappingResource);
@@ -75,7 +83,7 @@ public class LambdaServer {
     sch.addServlet(holder, "/*");
     
     // Content-Type header fix
-    sch.addFilter(AWSFilter.class, "/*", EnumSet.copyOf(Arrays.asList(DispatcherType.values())));
+    sch.addFilter(AWSFilter.class, "/*", copyOf(Arrays.asList(DispatcherType.values())));
 
     server = new Server(port);
     server.setHandler(sch);

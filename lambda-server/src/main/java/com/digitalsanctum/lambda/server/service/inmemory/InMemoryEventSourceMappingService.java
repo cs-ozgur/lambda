@@ -1,16 +1,19 @@
-package com.digitalsanctum.lambda.server.service;
+package com.digitalsanctum.lambda.server.service.inmemory;
 
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.EventSourceMappingConfiguration;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsRequest;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
-import jersey.repackaged.com.google.common.collect.ImmutableList;
+import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.digitalsanctum.lambda.server.util.ArnUtils.functionArn;
+import static jersey.repackaged.com.google.common.collect.ImmutableList.copyOf;
 
 /**
  * @author Shane Witbeck
@@ -19,17 +22,16 @@ import java.util.UUID;
 public class InMemoryEventSourceMappingService implements EventSourceMappingService {
 
   // key'd on uUID
-  private static final Map<String, EventSourceMappingConfiguration> MAPPINGS = new HashMap<>();
+  private static final Map<String, EventSourceMappingConfiguration> MAPPINGS = new ConcurrentHashMap<>();
   
 
   @Override
   public ListEventSourceMappingsResult listEventSourceMappingConfigurations(ListEventSourceMappingsRequest listEventSourceMappingsRequest) {
 
-
     // TODO filtering
     
     ListEventSourceMappingsResult result = new ListEventSourceMappingsResult();
-    result.setEventSourceMappings(ImmutableList.copyOf(MAPPINGS.values()));
+    result.setEventSourceMappings(copyOf(MAPPINGS.values()));
     
     return result;
   }
@@ -47,16 +49,15 @@ public class InMemoryEventSourceMappingService implements EventSourceMappingServ
   @Override
   public CreateEventSourceMappingResult createEventSourceMapping(CreateEventSourceMappingRequest createEventSourceMappingRequest) {
     
-    // TODO function name -> function ARN
+    String functionArn = functionArn(createEventSourceMappingRequest.getFunctionName());
     
     EventSourceMappingConfiguration eventSourceMappingConfiguration = new EventSourceMappingConfiguration()
         .withUUID(UUID.randomUUID().toString())
         .withBatchSize(createEventSourceMappingRequest.getBatchSize())
         .withEventSourceArn(createEventSourceMappingRequest.getEventSourceArn())
+        .withFunctionArn(functionArn)
         .withLastModified(new Date())
         .withState("Enabled");
-    
-    // TODO more props
     
     MAPPINGS.put(eventSourceMappingConfiguration.getUUID(), eventSourceMappingConfiguration);
 
@@ -69,13 +70,14 @@ public class InMemoryEventSourceMappingService implements EventSourceMappingServ
   }
 
   @Override
-  public EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, int batchSize, boolean enabled, String functionName) {
-    
+  public EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, 
+                                                                               int batchSize, 
+                                                                               String state) {    
     EventSourceMappingConfiguration mapping = MAPPINGS.get(uUID);
     mapping.setBatchSize(batchSize);
+    mapping.setState(state);
 
-    // TODO
-    
+    MAPPINGS.put(uUID, mapping);
     return mapping;
   }
 }

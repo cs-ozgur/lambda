@@ -1,23 +1,31 @@
-package com.digitalsanctum.lambda.server.service;
+package com.digitalsanctum.lambda.server.service.localfile;
 
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.FunctionCodeLocation;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
-import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.ListFunctionsResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import com.digitalsanctum.lambda.model.CreateImageRequest;
+import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.digitalsanctum.lambda.server.service.LambdaService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.codec.Charsets;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
@@ -31,34 +39,41 @@ import java.util.stream.Collectors;
 import static java.nio.file.Files.delete;
 
 /**
+ * Implementation functionArn LambdaService that persists function code and configuration to the local file system.
+ * 
  * @author Shane Witbeck
  * @since 10/23/16
  */
 public class LocalFileLambdaService implements LambdaService {
 
   private static final Logger log = LoggerFactory.getLogger(LocalFileLambdaService.class);
+  
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   private static final Path ROOT_DIR = Paths.get(System.getProperty("user.home"), ".lambda");
   private static final String CONFIG_SUFFIX = "-config.json";
   private static final String CODE_SUFFIX = "-code.jar";
   private static final String CODE_LOC_SUFFIX = "-code-loc.json";
+  
+  private final LocalFileSystemService localFileSystemService;
 
-  private final ObjectMapper mapper;
-
-  public LocalFileLambdaService(ObjectMapper objectMapper) {
-    this.mapper = objectMapper;
+  public LocalFileLambdaService(LocalFileSystemService localFileSystemService) {
+    this.localFileSystemService = localFileSystemService;
   }
 
   @Override
   public GetFunctionResult getFunction(String functionName) {
     Path path = Paths.get(ROOT_DIR.toString(), functionName + CONFIG_SUFFIX);
-    FunctionConfiguration configuration = (FunctionConfiguration) read(path.toString(), FunctionConfiguration.class);
+    FunctionConfiguration configuration = (FunctionConfiguration) localFileSystemService.read(path.toString(), FunctionConfiguration.class);
+    if (configuration == null) {
+      return null;
+    }
 
     GetFunctionResult result = new GetFunctionResult();
     result.setConfiguration(configuration);
 
     Path codeLocationPath = Paths.get(ROOT_DIR.toString(), functionName + CODE_LOC_SUFFIX);
-    FunctionCodeLocation functionCodeLocation = (FunctionCodeLocation) read(codeLocationPath.toString(), FunctionCodeLocation.class);
+    FunctionCodeLocation functionCodeLocation = (FunctionCodeLocation) localFileSystemService.read(codeLocationPath.toString(), FunctionCodeLocation.class);
     result.setCode(functionCodeLocation);
 
     return result;
@@ -68,7 +83,7 @@ public class LocalFileLambdaService implements LambdaService {
   public CreateFunctionResult saveFunctionConfiguration(FunctionConfiguration fc) {
 
     String path = Paths.get(ROOT_DIR.toString(), fc.getFunctionName() + CONFIG_SUFFIX).toString();
-    write(path, fc);
+    localFileSystemService.write(path, fc);
 
     return new CreateFunctionResult()
         .withFunctionName(fc.getFunctionName())
@@ -79,7 +94,7 @@ public class LocalFileLambdaService implements LambdaService {
   @Override
   public UpdateFunctionConfigurationResult updateFunctionConfiguration(UpdateFunctionConfigurationRequest request) {
 
-    String arn = ArnUtils.of(request.getFunctionName());
+    String arn = ArnUtils.functionArn(request.getFunctionName());
 
     FunctionConfiguration fc = new FunctionConfiguration();
     fc.setFunctionName(request.getFunctionName());
@@ -90,7 +105,7 @@ public class LocalFileLambdaService implements LambdaService {
     fc.setMemorySize(request.getMemorySize());
 
     String path = Paths.get(ROOT_DIR.toString(), fc.getFunctionName() + CONFIG_SUFFIX).toString();
-    write(path, fc);
+    localFileSystemService.write(path, fc);
 
     UpdateFunctionConfigurationResult result = new UpdateFunctionConfigurationResult();
     result.setMemorySize(request.getMemorySize());
@@ -111,23 +126,50 @@ public class LocalFileLambdaService implements LambdaService {
 
     UpdateFunctionCodeResult result = new UpdateFunctionCodeResult();
     result.setFunctionName(functionName);
-    result.setFunctionArn(ArnUtils.of(updateFunctionCodeRequest.getFunctionName()));
+    result.setFunctionArn(ArnUtils.functionArn(updateFunctionCodeRequest.getFunctionName()));
 
-    FunctionCode code = new FunctionCode();
-    code.setZipFile(updateFunctionCodeRequest.getZipFile());
+    CloseableHttpClient httpclient = HttpClients.createDefault();
 
-    // write jar with function code to a known file location
-    Path codePath = Paths.get(ROOT_DIR.toString(), functionName + CODE_SUFFIX);
-    write(codePath.toFile(), byteBuffer.array());
+    // TODO make endpoint configurable
+    HttpPost post = new HttpPost("http://localhost:" + 8082 + "/images");
 
-    FunctionCodeLocation functionCodeLocation = new FunctionCodeLocation();
-    functionCodeLocation.setLocation(codePath.toString());
-    functionCodeLocation.setRepositoryType("Local");
+    try {
 
-    // write FunctionCodeLocation to file
-    Path codeLocationPath = Paths.get(ROOT_DIR.toString(), functionName + CODE_LOC_SUFFIX);
-    write(codeLocationPath.toString(), functionCodeLocation);
+      CreateImageRequest request = new CreateImageRequest();
+      request.setImageName(updateFunctionCodeRequest.getFunctionName());
+      request.setLambdaJar(byteBuffer);
 
+      String requestJson = mapper.writeValueAsString(request);
+
+      StringEntity input = new StringEntity(requestJson);
+      post.setEntity(input);
+
+      input.setContentType("application/json");
+
+      CloseableHttpResponse response = httpclient.execute(post);
+
+      HttpEntity entity = response.getEntity();
+
+      String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
+      CreateImageResult createImageResult = mapper.readValue(responseJson.getBytes(), CreateImageResult.class);
+
+      FunctionCode code = new FunctionCode();
+      code.setZipFile(updateFunctionCodeRequest.getZipFile());
+      
+      // write jar with function code to a known file location
+      Path codePath = Paths.get(ROOT_DIR.toString(), functionName + CODE_SUFFIX);
+      localFileSystemService.write(codePath.toFile(), byteBuffer.array());
+
+      FunctionCodeLocation functionCodeLocation = new FunctionCodeLocation();
+      functionCodeLocation.setLocation(createImageResult.getImageId());
+      functionCodeLocation.setRepositoryType("Docker");
+
+      Path codeLocationPath = Paths.get(ROOT_DIR.toString(), functionName + CODE_LOC_SUFFIX);
+      localFileSystemService.write(codeLocationPath.toString(), functionCodeLocation);
+
+    } catch (IOException e) {
+      log.error("Error updating function code", e);
+    }
     return result;
   }
 
@@ -136,7 +178,7 @@ public class LocalFileLambdaService implements LambdaService {
     FunctionConfiguration configuration = null;
     try {
       Path path = Paths.get(ROOT_DIR.toString(), functionName + CONFIG_SUFFIX);
-      configuration = (FunctionConfiguration) read(path.toString(), FunctionConfiguration.class);
+      configuration = (FunctionConfiguration) localFileSystemService.read(path.toString(), FunctionConfiguration.class);
       delete(path);
     } catch (IOException e) {
       e.printStackTrace();
@@ -151,7 +193,7 @@ public class LocalFileLambdaService implements LambdaService {
     try {
       List<FunctionConfiguration> functions = Files.walk(ROOT_DIR)
           .filter(pathMatcher::matches)
-          .map(path -> (FunctionConfiguration) read(path.toString(), FunctionConfiguration.class))
+          .map(path -> (FunctionConfiguration) localFileSystemService.read(path.toString(), FunctionConfiguration.class))
           .collect(Collectors.toList());
       listFunctionsResult.setFunctions(functions);
 
@@ -159,38 +201,5 @@ public class LocalFileLambdaService implements LambdaService {
       e.printStackTrace();
     }
     return listFunctionsResult;
-  }
-
-  @Override
-  public Object invokeFunction(InvokeRequest invokeRequest,
-                               FunctionConfiguration functionConfiguration,
-                               FunctionCodeLocation functionCodeLocation) {
-    // TODO
-    return null;
-  }
-
-  private void write(File file, byte[] bytes) {
-    try (FileOutputStream fileOutputStream = new FileOutputStream(file, false)) {
-      fileOutputStream.write(bytes);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private void write(String path, Object object) {
-    try {
-      mapper.writeValue(new File(path), object);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private Object read(String path, Class<?> clazz) {
-    try {
-      return mapper.readValue(new File(path), clazz);
-    } catch (IOException e) {
-      e.printStackTrace();
-      return null;
-    }
   }
 }

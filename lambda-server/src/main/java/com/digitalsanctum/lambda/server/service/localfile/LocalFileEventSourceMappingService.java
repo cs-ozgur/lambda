@@ -2,9 +2,13 @@ package com.digitalsanctum.lambda.server.service.localfile;
 
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
+import com.amazonaws.services.lambda.model.DeleteEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.EventSourceMappingConfiguration;
+import com.amazonaws.services.lambda.model.GetEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsRequest;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
+import com.amazonaws.services.lambda.model.UpdateEventSourceMappingRequest;
+import com.amazonaws.services.lambda.model.UpdateEventSourceMappingResult;
 import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 
@@ -55,22 +59,38 @@ public class LocalFileEventSourceMappingService implements EventSourceMappingSer
   }
 
   @Override
-  public EventSourceMappingConfiguration getEventSourceMappingConfiguration(String uUID) {
+  public GetEventSourceMappingResult getEventSourceMappingConfiguration(String uUID) {
     Path path = Paths.get(ROOT_DIR.toString(), uUID + MAPPING_SUFFIX);
-    return (EventSourceMappingConfiguration) localFileSystemService.read(path.toString(), EventSourceMappingConfiguration.class);
+    EventSourceMappingConfiguration eventSourceMappingConfiguration 
+        = (EventSourceMappingConfiguration) localFileSystemService.read(path.toString(), EventSourceMappingConfiguration.class);
+    return new GetEventSourceMappingResult()
+        .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
+        .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
+        .withFunctionArn(eventSourceMappingConfiguration.getFunctionArn())
+        .withLastModified(eventSourceMappingConfiguration.getLastModified())
+        .withState(eventSourceMappingConfiguration.getState())
+        .withUUID(eventSourceMappingConfiguration.getUUID());
   }
 
   @Override
-  public EventSourceMappingConfiguration deleteEventSourceMappingConfiguration(String uUID) {
+  public DeleteEventSourceMappingResult deleteEventSourceMappingConfiguration(String uUID) {
     EventSourceMappingConfiguration eventSourceMappingConfiguration = null;
     try {
       Path path = Paths.get(ROOT_DIR.toString(), uUID + MAPPING_SUFFIX);
-      eventSourceMappingConfiguration = (EventSourceMappingConfiguration) localFileSystemService.read(path.toString(), EventSourceMappingConfiguration.class);
+      eventSourceMappingConfiguration 
+          = (EventSourceMappingConfiguration) localFileSystemService.read(path.toString(), EventSourceMappingConfiguration.class);
       delete(path);
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return eventSourceMappingConfiguration;
+
+    return new DeleteEventSourceMappingResult()
+        .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
+        .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
+        .withFunctionArn(eventSourceMappingConfiguration.getFunctionArn())
+        .withLastModified(eventSourceMappingConfiguration.getLastModified())
+        .withState(eventSourceMappingConfiguration.getState())
+        .withUUID(eventSourceMappingConfiguration.getUUID());
   }
 
   @Override
@@ -84,28 +104,36 @@ public class LocalFileEventSourceMappingService implements EventSourceMappingSer
         .withEventSourceArn(createEventSourceMappingRequest.getEventSourceArn())
         .withFunctionArn(functionArn)
         .withLastModified(new Date())
-        .withState("Enabled");
+        .withState(createEventSourceMappingRequest.getEnabled() ? "Enabled" : "Disabled");
 
     String path = Paths.get(ROOT_DIR.toString(), eventSourceMappingConfiguration.getUUID() + MAPPING_SUFFIX).toString();
     localFileSystemService.write(path, eventSourceMappingConfiguration);
-    
+
     return new CreateEventSourceMappingResult()
         .withUUID(eventSourceMappingConfiguration.getUUID())
         .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
         .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
         .withLastModified(eventSourceMappingConfiguration.getLastModified())
-        .withState("Enabled");
+        .withState(createEventSourceMappingRequest.getEnabled() ? "Enabled" : "Disabled");
   }
 
   @Override
-  public EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, int batchSize, String state) {
+  public UpdateEventSourceMappingResult updateEventSourceMappingConfiguration(UpdateEventSourceMappingRequest updateEventSourceMappingRequest) {
     
-    Path path = Paths.get(ROOT_DIR.toString(), uUID + MAPPING_SUFFIX);    
+    Path path = Paths.get(ROOT_DIR.toString(), updateEventSourceMappingRequest.getUUID() + MAPPING_SUFFIX);    
     
-    EventSourceMappingConfiguration eventSourceMappingConfiguration = (EventSourceMappingConfiguration) localFileSystemService.read(path.toString(), EventSourceMappingConfiguration.class);    
-    eventSourceMappingConfiguration.setBatchSize(batchSize);
-    eventSourceMappingConfiguration.setState(state);
+    EventSourceMappingConfiguration eventSourceMappingConfiguration 
+        = (EventSourceMappingConfiguration) localFileSystemService.read(path.toString(), EventSourceMappingConfiguration.class);    
+    
+    eventSourceMappingConfiguration.setBatchSize(updateEventSourceMappingRequest.getBatchSize());
+    eventSourceMappingConfiguration.setState(updateEventSourceMappingRequest.getEnabled() ? "Enabled" : "Disabled");
 
-    return eventSourceMappingConfiguration;
+    return new UpdateEventSourceMappingResult()
+        .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
+        .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
+        .withFunctionArn(eventSourceMappingConfiguration.getFunctionArn())
+        .withLastModified(eventSourceMappingConfiguration.getLastModified())
+        .withState(eventSourceMappingConfiguration.getState())
+        .withUUID(eventSourceMappingConfiguration.getUUID());
   }
 }

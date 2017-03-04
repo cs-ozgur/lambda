@@ -2,9 +2,13 @@ package com.digitalsanctum.lambda.server.service;
 
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
+import com.amazonaws.services.lambda.model.DeleteEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.EventSourceMappingConfiguration;
+import com.amazonaws.services.lambda.model.GetEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsRequest;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
+import com.amazonaws.services.lambda.model.UpdateEventSourceMappingRequest;
+import com.amazonaws.services.lambda.model.UpdateEventSourceMappingResult;
 
 /**
  * @author Shane Witbeck
@@ -14,11 +18,11 @@ public interface EventSourceMappingService {
 
   ListEventSourceMappingsResult listEventSourceMappingConfigurations(ListEventSourceMappingsRequest listEventSourceMappingsRequest);
 
-  EventSourceMappingConfiguration getEventSourceMappingConfiguration(String uUID);
+  GetEventSourceMappingResult getEventSourceMappingConfiguration(String uUID);
 
-  EventSourceMappingConfiguration deleteEventSourceMappingConfiguration(String uUID);
+  DeleteEventSourceMappingResult deleteEventSourceMappingConfiguration(String uUID);
 
   CreateEventSourceMappingResult createEventSourceMapping(CreateEventSourceMappingRequest createEventSourceMappingRequest);
 
-  EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, int batchSize, String state);
+  UpdateEventSourceMappingResult updateEventSourceMappingConfiguration(UpdateEventSourceMappingRequest updateEventSourceMappingRequest);
 }

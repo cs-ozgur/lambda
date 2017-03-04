@@ -156,7 +156,6 @@ public class LocalFunctionResourceTest extends LocalBaseTest {
    * http://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
    */
   @Test
-//  @Ignore("LocalFileLambdaService.invokeFunction still needs to be implemented")
   public void testInvokeRequest_RequestResponse() throws Exception {    
     createFunction();    
     invoke_RequestResponse();

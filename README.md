@@ -27,8 +27,14 @@ Deploy and invoke AWS Lambda functions locally.
 
 ## Road map
 
-- Persist configurations between server restarts.
 - Support for event sources such as AWS DynamoDB and AWS Kinesis Streams (in progress)
+- S3
+- SQS
+- API Gateway
+- CloudFormation
+- Cloudwatch 
+- Elasticache
+- Elasticsearch
 - More examples
 - ?
 
@@ -71,11 +77,11 @@ will start the server on port 8080 by default. Or provide the port to run on:
 
 ### AWS CLI
     
-List functions (Local):
+List functions:
     
     aws lambda list-functions --profile local --endpoint-url http://localhost:8080
        
-Create a function (Local):       
+Create a function:       
        
     cd <LAMBDA_PROJECT_ROOT>       
     aws lambda create-function --function-name test1 \
@@ -88,15 +94,15 @@ Create a function (Local):
        --memory-size 512 \
        --endpoint-url http://localhost:8080
                   
-Get a function (Local):       
+Get a function:       
     
     aws lambda get-function --function-name test1 --endpoint-url http://localhost:8080    
     
-Invoke a function (Local):    
+Invoke a function:    
     
     aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output.json    
                 
-Update code for a function (Local):
+Update code for a function:
 
     aws lambda update-function-code --function-name test1 \
         --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \

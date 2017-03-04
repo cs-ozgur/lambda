@@ -66,7 +66,7 @@ public class LambdaServer {
     rc.register(provider);
 
     // resources    
-    EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(eventSourceMappingService, lambdaService);
+    EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(eventSourceMappingService);
     FunctionResource functionResource = new FunctionResource(lambdaService);
     rc.register(eventSourceMappingResource);
     rc.register(functionResource);

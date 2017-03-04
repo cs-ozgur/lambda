@@ -2,9 +2,13 @@ package com.digitalsanctum.lambda.server.service.inmemory;
 
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
+import com.amazonaws.services.lambda.model.DeleteEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.EventSourceMappingConfiguration;
+import com.amazonaws.services.lambda.model.GetEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsRequest;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
+import com.amazonaws.services.lambda.model.UpdateEventSourceMappingRequest;
+import com.amazonaws.services.lambda.model.UpdateEventSourceMappingResult;
 import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
 
 import java.util.Date;
@@ -23,32 +27,48 @@ public class InMemoryEventSourceMappingService implements EventSourceMappingServ
 
   // key'd on uUID
   private static final Map<String, EventSourceMappingConfiguration> MAPPINGS = new ConcurrentHashMap<>();
-  
+
 
   @Override
   public ListEventSourceMappingsResult listEventSourceMappingConfigurations(ListEventSourceMappingsRequest listEventSourceMappingsRequest) {
 
     // TODO filtering
-    
-    ListEventSourceMappingsResult result = new ListEventSourceMappingsResult();
-    result.setEventSourceMappings(copyOf(MAPPINGS.values()));
-    
-    return result;
+
+    return new ListEventSourceMappingsResult()
+        .withEventSourceMappings(copyOf(MAPPINGS.values()));
   }
 
   @Override
-  public EventSourceMappingConfiguration getEventSourceMappingConfiguration(String uUID) {
-    return MAPPINGS.get(uUID);
+  public GetEventSourceMappingResult getEventSourceMappingConfiguration(String uUID) {
+    
+    EventSourceMappingConfiguration eventSourceMappingConfiguration = MAPPINGS.get(uUID);
+    
+    return new GetEventSourceMappingResult()
+        .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
+        .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
+        .withFunctionArn(eventSourceMappingConfiguration.getFunctionArn())
+        .withLastModified(eventSourceMappingConfiguration.getLastModified())
+        .withState(eventSourceMappingConfiguration.getState())
+        .withUUID(eventSourceMappingConfiguration.getUUID());
   }
 
   @Override
-  public EventSourceMappingConfiguration deleteEventSourceMappingConfiguration(String uUID) {
-    return MAPPINGS.remove(uUID);
+  public DeleteEventSourceMappingResult deleteEventSourceMappingConfiguration(String uUID) {
+    
+    EventSourceMappingConfiguration previous = MAPPINGS.remove(uUID);
+    
+    return new DeleteEventSourceMappingResult()
+        .withBatchSize(previous.getBatchSize())
+        .withEventSourceArn(previous.getEventSourceArn())
+        .withFunctionArn(previous.getFunctionArn())
+        .withLastModified(previous.getLastModified())
+        .withState(previous.getState())
+        .withUUID(previous.getUUID());
   }
 
   @Override
   public CreateEventSourceMappingResult createEventSourceMapping(CreateEventSourceMappingRequest createEventSourceMappingRequest) {
-    
+
     String functionArn = functionArn(createEventSourceMappingRequest.getFunctionName());
     
     EventSourceMappingConfiguration eventSourceMappingConfiguration = new EventSourceMappingConfiguration()
@@ -57,8 +77,8 @@ public class InMemoryEventSourceMappingService implements EventSourceMappingServ
         .withEventSourceArn(createEventSourceMappingRequest.getEventSourceArn())
         .withFunctionArn(functionArn)
         .withLastModified(new Date())
-        .withState("Enabled");
-    
+        .withState(createEventSourceMappingRequest.getEnabled() ? "Enabled" : "Disabled");
+
     MAPPINGS.put(eventSourceMappingConfiguration.getUUID(), eventSourceMappingConfiguration);
 
     return new CreateEventSourceMappingResult()
@@ -66,18 +86,25 @@ public class InMemoryEventSourceMappingService implements EventSourceMappingServ
         .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
         .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
         .withLastModified(eventSourceMappingConfiguration.getLastModified())
-        .withState("Enabled");
+        .withState(eventSourceMappingConfiguration.getState());
   }
 
   @Override
-  public EventSourceMappingConfiguration updateEventSourceMappingConfiguration(String uUID, 
-                                                                               int batchSize, 
-                                                                               String state) {    
-    EventSourceMappingConfiguration mapping = MAPPINGS.get(uUID);
-    mapping.setBatchSize(batchSize);
-    mapping.setState(state);
-
-    MAPPINGS.put(uUID, mapping);
-    return mapping;
+  public UpdateEventSourceMappingResult updateEventSourceMappingConfiguration(UpdateEventSourceMappingRequest updateEventSourceMappingRequest) {
+    
+    EventSourceMappingConfiguration eventSourceMappingConfiguration = MAPPINGS.get(updateEventSourceMappingRequest.getUUID());
+    
+    eventSourceMappingConfiguration.setBatchSize(updateEventSourceMappingRequest.getBatchSize());
+    eventSourceMappingConfiguration.withState(updateEventSourceMappingRequest.getEnabled() ? "Enabled" : "Disabled");
+    
+    MAPPINGS.put(updateEventSourceMappingRequest.getUUID(), eventSourceMappingConfiguration);
+    
+    return new UpdateEventSourceMappingResult()
+        .withBatchSize(eventSourceMappingConfiguration.getBatchSize())
+        .withEventSourceArn(eventSourceMappingConfiguration.getEventSourceArn())
+        .withFunctionArn(eventSourceMappingConfiguration.getFunctionArn())
+        .withLastModified(eventSourceMappingConfiguration.getLastModified())
+        .withState(eventSourceMappingConfiguration.getState())
+        .withUUID(eventSourceMappingConfiguration.getUUID());
   }
 }

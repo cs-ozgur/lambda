@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
+ * Tests that a lambda function can successfully consume a Kinesis stream.
+ * 
  * @author Shane Witbeck
  * @since 3/3/17
  */

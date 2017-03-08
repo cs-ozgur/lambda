@@ -13,7 +13,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
-import com.digitalsanctum.lambda.server.service.LambdaService;
+import com.digitalsanctum.lambda.service.LambdaService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

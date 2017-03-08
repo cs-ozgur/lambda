@@ -1,17 +1,25 @@
 package com.digitalsanctum.lambda.server;
 
+import com.amazonaws.services.lambda.model.EventSourceMappingConfiguration;
+import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
 import com.digitalsanctum.lambda.server.exception.AWSLambdaExceptionMapper;
 import com.digitalsanctum.lambda.server.exception.ResourceNotFoundExceptionMapper;
 import com.digitalsanctum.lambda.server.filter.AWSFilter;
 import com.digitalsanctum.lambda.server.resource.EventSourceMappingResource;
 import com.digitalsanctum.lambda.server.resource.FunctionResource;
 import com.digitalsanctum.lambda.server.resource.HealthcheckResource;
-import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
-import com.digitalsanctum.lambda.server.service.inmemory.InMemoryEventSourceMappingService;
-import com.digitalsanctum.lambda.server.service.inmemory.InMemoryLambdaService;
-import com.digitalsanctum.lambda.server.service.LambdaService;
+import com.digitalsanctum.lambda.service.EventSourceMappingService;
+import com.digitalsanctum.lambda.service.LambdaService;
+import com.digitalsanctum.lambda.service.inmemory.InMemoryEventSourceMappingService;
+import com.digitalsanctum.lambda.service.inmemory.InMemoryLambdaService;
+import com.digitalsanctum.lambda.service.localfile.LocalFileEventSourceMappingService;
+import com.digitalsanctum.lambda.service.localfile.LocalFileLambdaService;
+import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
+import com.digitalsanctum.lambda.service.serialization.EventSourceMappingConfigurationSerializer;
+import com.digitalsanctum.lambda.service.serialization.ListEventSourceMappingsResultSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -25,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
 import java.util.Arrays;
-import java.util.EnumSet;
 
 import static java.util.EnumSet.copyOf;
 
@@ -57,12 +64,18 @@ public class LambdaServer {
     ResourceConfig rc = new ResourceConfig();
 
     // create custom ObjectMapper for AWS SDK
-    final ObjectMapper awsSdkObjectMapper = new ObjectMapper();
-    awsSdkObjectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.UpperCamelCaseStrategy.UPPER_CAMEL_CASE);
+    final ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.UpperCamelCaseStrategy.UPPER_CAMEL_CASE);
 
+    // custom serializers
+    SimpleModule simpleModule = new SimpleModule();
+    simpleModule.addSerializer(EventSourceMappingConfiguration.class, new EventSourceMappingConfigurationSerializer());
+    simpleModule.addSerializer(ListEventSourceMappingsResult.class, new ListEventSourceMappingsResultSerializer());
+    objectMapper.registerModule(simpleModule);
+    
     // create JsonProvider to provide custom ObjectMapper
     JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
-    provider.setMapper(awsSdkObjectMapper);
+    provider.setMapper(objectMapper);
     rc.register(provider);
 
     // resources    
@@ -119,7 +132,14 @@ public class LambdaServer {
       port = Integer.parseInt(args[0]);
     }
     
-    LambdaServer lambdaServer = new LambdaServer(port);
+//    LambdaServer lambdaServer = new LambdaServer(port);
+    
+    LocalFileSystemService localFileSystemService = new LocalFileSystemService();
+    LambdaServer lambdaServer = new LambdaServer(
+        port, 
+        new LocalFileLambdaService(localFileSystemService), 
+        new LocalFileEventSourceMappingService(localFileSystemService)
+    );
     lambdaServer.start();
   }
 }

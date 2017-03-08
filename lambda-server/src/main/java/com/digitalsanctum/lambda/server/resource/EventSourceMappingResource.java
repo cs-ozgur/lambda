@@ -8,7 +8,7 @@ import com.amazonaws.services.lambda.model.ListEventSourceMappingsRequest;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
 import com.amazonaws.services.lambda.model.UpdateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.UpdateEventSourceMappingResult;
-import com.digitalsanctum.lambda.server.service.EventSourceMappingService;
+import com.digitalsanctum.lambda.service.EventSourceMappingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

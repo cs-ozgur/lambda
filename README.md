@@ -21,20 +21,25 @@ Deploy and invoke AWS Lambda functions locally.
     
 ## Features
 - Deploy Lambda functions locally and invoke them
-- Compatible with AWS Lambda SDK and CLI
+- Compatible with official AWS Lambda APIs
+- Partial support for other AWS resources (see Road map below)
+    - DynamoDB (via containerized DynamoDB Local)
+    - Kinesis Streams (via containerized kinesalite) 
 - lambda-bridge-server: manages underlying Docker images and containers to support Lambda functions
 - lambda-server: hosts Lambda endpoints; delegates to lambda-bridge-server for CreateFunction and Invoke Lambda actions. 
+
 
 ## Road map
 
 - Support for event sources such as AWS DynamoDB and AWS Kinesis Streams (in progress)
-- S3
-- SQS
+- S3 (via containerized fake-S3)
+- SQS (via containerized elasticmq)
 - API Gateway
 - CloudFormation
-- Cloudwatch 
-- Elasticache
-- Elasticsearch
+- Cloudwatch
+- EC2 (via AMI -> container conversion?)
+- Elasticache (via containerized redis)
+- Elasticsearch (via containerized elasticsearch)
 - More examples
 - ?
 
@@ -56,6 +61,8 @@ A standalone server that implements the following AWS Lambda endpoints:
 
 - CreateEventSourceMapping
 - ListEventSourceMappings
+- UpdateEventSourceMapping
+
 
 You can use the AWS CLI and AWS Java SDK to operate like you normally would with real AWS endpoints.
 
@@ -86,7 +93,7 @@ Create a function:
     cd <LAMBDA_PROJECT_ROOT>       
     aws lambda create-function --function-name test1 \
        --runtime java8 \
-       --role arn:aws:iam::515292396565:role/lambda_basic_execution \
+       --role arn:aws:iam::111111111111:role/lambda_basic_execution \
        --handler com.digitalsanctum.lambda.functions.requestresponse.Concat \
        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
        --description "test1 description" \

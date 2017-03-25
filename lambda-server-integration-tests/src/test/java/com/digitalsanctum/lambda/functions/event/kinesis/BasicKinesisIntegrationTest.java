@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.util.IOUtils;
 import com.digitalsanctum.lambda.server.LocalBaseTest;
-import com.digitalsanctum.lambda.server.resource.LocalFunctionResourceTest;
+import com.digitalsanctum.lambda.server.resource.FunctionResourceTest;
 import com.google.common.base.Charsets;
 import org.junit.After;
 import org.junit.Before;
@@ -99,7 +99,7 @@ public class BasicKinesisIntegrationTest extends LocalBaseTest {
         .withTimeout(TEST_TIMEOUT)
         .withRuntime(TEST_RUNTIME);
 
-    InputStream is = LocalFunctionResourceTest.class.getResourceAsStream(TEST_LAMBDA_JAR);
+    InputStream is = FunctionResourceTest.class.getResourceAsStream(TEST_LAMBDA_JAR);
     byte[] lambdaByteArr = IOUtils.toByteArray(is);
     ByteBuffer byteBuffer = ByteBuffer.wrap(lambdaByteArr);
 

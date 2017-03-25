@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Integer.parseInt;
+
 /**
  * @author Shane Witbeck
  * @since 8/25/16
@@ -58,7 +60,7 @@ public abstract class AbstractDockerService implements DockerService {
     try {
       ContainerInfo info = createAndRunContainer(imageId());
       String hostPort = (info.networkSettings().ports().get(containerPort() + "/tcp").get(0)).hostPort();
-      port = Integer.parseInt(hostPort);
+      port = parseInt(hostPort);
       this.containerId = info.id();
       running = true;
       log.info("{} running on port {}", name(), hostPort);
@@ -68,7 +70,7 @@ public abstract class AbstractDockerService implements DockerService {
     return port;
   }
 
-  private ContainerInfo createAndRunContainer(String imageId) throws DockerException, InterruptedException {
+  private ContainerInfo createAndRunContainer(String imageId, String... volumes) throws DockerException, InterruptedException {
 
     // verify image is available/present
     try {
@@ -96,13 +98,13 @@ public abstract class AbstractDockerService implements DockerService {
     final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
 
     // Create container with exposed ports
-    final ContainerConfig containerConfig = ContainerConfig.builder()
+    final ContainerConfig.Builder containerConfig = ContainerConfig.builder()
         .hostConfig(hostConfig)
         .image(imageId)
-        .exposedPorts(ports)
-        .build();
-
-    final ContainerCreation creation = dockerClient.createContainer(containerConfig);
+        .addVolumes(volumes)
+        .exposedPorts(ports);
+    
+    final ContainerCreation creation = dockerClient.createContainer(containerConfig.build());
     final String id = creation.id();
 
     // Start container

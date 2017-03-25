@@ -141,10 +141,10 @@ Create an event source mapping:
     
 Instantiating an AWS Lambda client to work with local functions:    
     
-    AWSLambda awsLambda = AwsClientBuilder.EndpointConfiguration endpointConfiguration 
+    AwsClientBuilder.EndpointConfiguration endpointConfiguration 
             = new AwsClientBuilder.EndpointConfiguration("http://localhost:8080", "local");
             
-    awsLambda = AWSLambdaClientBuilder.standard()
+    AWSLambda awsLambda = AWSLambdaClientBuilder.standard()
         .withEndpointConfiguration(endpointConfiguration)
         .build();
     

@@ -32,8 +32,8 @@ import static java.nio.file.Files.delete;
  */
 public class LocalFileEventSourceMappingService implements EventSourceMappingService {
 
-  private static final Path ROOT_DIR = Paths.get(System.getProperty("user.home"), ".lambda");
-  private static final String MAPPING_SUFFIX = "-mappings.json";
+  public static final Path ROOT_DIR = Paths.get(System.getProperty("user.home"), ".lambda");
+  public static final String MAPPING_SUFFIX = "-mappings.json";
 
   private final LocalFileSystemService localFileSystemService;
 

@@ -1,6 +1,8 @@
 package com.digitalsanctum.lambda.service.localfile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +14,8 @@ import java.nio.file.StandardOpenOption;
  * @since 3/3/17
  */
 public class LocalFileSystemService {
+  
+  private static final Logger log = LoggerFactory.getLogger(LocalFileSystemService.class);
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -40,5 +44,15 @@ public class LocalFileSystemService {
       e.printStackTrace();
     }
     return null;
+  }
+  
+  public boolean delete(Path path) {
+    try {
+      log.info("deleting {}", path);
+      return Files.deleteIfExists(path);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return false;
   }
 }

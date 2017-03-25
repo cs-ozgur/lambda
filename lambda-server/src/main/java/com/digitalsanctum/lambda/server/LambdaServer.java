@@ -1,5 +1,6 @@
 package com.digitalsanctum.lambda.server;
 
+import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.EventSourceMappingConfiguration;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
 import com.digitalsanctum.lambda.server.exception.AWSLambdaExceptionMapper;
@@ -15,6 +16,7 @@ import com.digitalsanctum.lambda.service.inmemory.InMemoryLambdaService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileEventSourceMappingService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileLambdaService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
+import com.digitalsanctum.lambda.service.serialization.CreateEventSourceMappingResultSerializer;
 import com.digitalsanctum.lambda.service.serialization.EventSourceMappingConfigurationSerializer;
 import com.digitalsanctum.lambda.service.serialization.ListEventSourceMappingsResultSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,6 +71,7 @@ public class LambdaServer {
 
     // custom serializers
     SimpleModule simpleModule = new SimpleModule();
+    simpleModule.addSerializer(CreateEventSourceMappingResult.class, new CreateEventSourceMappingResultSerializer());
     simpleModule.addSerializer(EventSourceMappingConfiguration.class, new EventSourceMappingConfigurationSerializer());
     simpleModule.addSerializer(ListEventSourceMappingsResult.class, new ListEventSourceMappingsResultSerializer());
     objectMapper.registerModule(simpleModule);

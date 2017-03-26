@@ -20,14 +20,13 @@ import static org.junit.Assert.assertNotNull;
  */
 public class DockerContainerServiceTest {
 
-  private DockerImageBuilder dockerImageBuilder;
   private ContainerService dockerContainerService;
   
 
   @Before
   public void setup() throws Exception {
     final DockerClient dockerClient = DefaultDockerClient.fromEnv().build();
-    dockerImageBuilder = new DockerImageBuilder(dockerClient);
+    DockerImageBuilder dockerImageBuilder = new DockerImageBuilder(dockerClient);
     dockerContainerService = new DockerContainerService(dockerClient);
 
     CreateImageRequest request = new CreateImageRequest();

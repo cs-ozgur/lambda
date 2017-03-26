@@ -2,10 +2,6 @@ package com.digitalsanctum.lambda.server.resource;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.protocol.json.SdkJsonGenerator;
-import com.amazonaws.protocol.json.StructuredJsonGenerator;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -20,7 +16,6 @@ import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
-import com.amazonaws.services.dynamodbv2.model.StreamRecord;
 import com.amazonaws.services.dynamodbv2.model.StreamSpecification;
 import com.amazonaws.services.dynamodbv2.model.StreamViewType;
 import com.amazonaws.services.lambda.AWSLambda;
@@ -33,7 +28,6 @@ import com.amazonaws.services.lambda.model.DeleteEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.DeleteFunctionRequest;
 import com.amazonaws.services.lambda.model.EventSourcePosition;
 import com.amazonaws.services.lambda.model.FunctionCode;
-import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.logs.AWSLogs;
 import com.amazonaws.services.logs.AWSLogsAsyncClientBuilder;
 import com.amazonaws.services.logs.model.DeleteLogGroupRequest;
@@ -47,9 +41,6 @@ import com.amazonaws.services.logs.model.GetLogEventsResult;
 import com.amazonaws.services.logs.model.LogStream;
 import com.amazonaws.services.logs.model.ResourceNotFoundException;
 import com.amazonaws.util.IOUtils;
-import com.digitalsanctum.lambda.marshallers.DynamodbEventJsonMarshaller;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -60,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -86,7 +76,6 @@ public class AWSEventSourceMappingTest {
   private AmazonDynamoDB amazonDynamoDB;
   private AWSLambda awsLambda;
   private AWSLogs awsLogs;
-  private AmazonCloudWatch amazonCloudWatch;
 
   private String eventSourceMappingUUID;
   private String logGroupName;
@@ -102,7 +91,6 @@ public class AWSEventSourceMappingTest {
 
     amazonDynamoDB = AmazonDynamoDBClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
     awsLambda = AWSLambdaClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
-    amazonCloudWatch = AmazonCloudWatchClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
     awsLogs = AWSLogsAsyncClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
   }
 
@@ -115,12 +103,6 @@ public class AWSEventSourceMappingTest {
     amazonDynamoDB.deleteTable(TABLE_NAME);
     awsLambda.deleteFunction(new DeleteFunctionRequest().withFunctionName(FUNCTION_NAME));
     awsLogs.deleteLogGroup(new DeleteLogGroupRequest(logGroupName));
-  }
-
-  @Test
-  @Ignore
-  public void test() {
-
   }
 
   @Test
@@ -145,7 +127,7 @@ public class AWSEventSourceMappingTest {
   }
 
   @Test
-//  @Ignore
+  @Ignore
   public void createEventSourceMapping() throws Exception {
 
     // create a DynamoDB table
@@ -251,40 +233,5 @@ public class AWSEventSourceMappingTest {
       }      
     }
     return true;
-  }
-
-  private String getTestDynamodbEvent() {
-
-    StreamRecord streamRecord = new StreamRecord()
-        .withStreamViewType("NEW_AND_OLD_IMAGES")
-        .withSequenceNumber("111")
-        .withSizeBytes(26L)
-        .withApproximateCreationDateTime(new Date(1485566940000L))
-        .withKeys(of(
-            "Id", new AttributeValue().withN("101")
-        ))
-        .withNewImage(of(
-            "Message", new AttributeValue("New item!"),
-            "Id", new AttributeValue().withN("101")
-        ));
-
-    DynamodbEvent.DynamodbStreamRecord record = new DynamodbEvent.DynamodbStreamRecord();
-    record.setEventSourceARN("arn:aws:dynamodb:us-west-2:account-id:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899");
-    record.setAwsRegion("us-west-2");
-    record.setDynamodb(streamRecord);
-    record.setEventID("1");
-    record.setEventName("INSERT");
-    record.setEventSource("aws:dynamodb");
-    record.setEventVersion("1.0");
-
-    DynamodbEvent event = new DynamodbEvent();
-    event.setRecords(ImmutableList.of(record));
-
-    JsonFactory jsonFactory = new JsonFactory();
-    StructuredJsonGenerator structuredJsonGenerator = new SdkJsonGenerator(jsonFactory, "application/json");
-
-    DynamodbEventJsonMarshaller.getInstance().marshall(event, structuredJsonGenerator);
-
-    return new String(structuredJsonGenerator.getBytes());
   }
 }

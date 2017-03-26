@@ -42,7 +42,7 @@ public abstract class AbstractDockerService implements DockerService {
     this.dockerClient = dockerClient;
   }
 
-  protected DockerClient initDefaultClient() {
+  private DockerClient initDefaultClient() {
     DockerClient dockerClient = null;
     try {
       dockerClient = DefaultDockerClient.fromEnv().build();

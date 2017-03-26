@@ -172,7 +172,7 @@ public class Executor implements ResultProvider {
       logger.log(toString());
       try {
         Object result;
-        if (functionMethod.getParameterCount() == 3) {
+        if (functionMethod.getParameterCount() == 2) {
           result = functionMethod.invoke(functionInstance, input, context);
         } else {
           result = functionMethod.invoke(functionInstance, input);

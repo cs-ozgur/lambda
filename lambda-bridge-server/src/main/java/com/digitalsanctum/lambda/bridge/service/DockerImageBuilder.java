@@ -5,7 +5,6 @@ import com.digitalsanctum.lambda.model.CreateImageResult;
 import com.google.common.io.Files;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.exceptions.DockerRequestException;
 import com.spotify.docker.client.messages.Image;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

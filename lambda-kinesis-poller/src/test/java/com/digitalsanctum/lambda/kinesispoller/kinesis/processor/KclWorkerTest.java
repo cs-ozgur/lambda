@@ -2,6 +2,8 @@ package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
 import com.amazonaws.services.kinesis.model.DescribeStreamRequest;
 import com.amazonaws.services.kinesis.model.DescribeStreamResult;
@@ -33,7 +35,7 @@ public class KclWorkerTest {
   private static final String TEST_STREAM = "test-stream";
 
   private static DockerDynamoDB dockerDynamoDB;
-  private static AmazonKinesisClient amazonKinesisClient;
+  private static AmazonKinesis amazonKinesis;
   private static DockerKinesis dockerKinesis;
   private static KclWorker kclWorker;
 
@@ -53,16 +55,17 @@ public class KclWorkerTest {
     assertThat(SDKGlobalConfiguration.isCborDisabled(), is(true));
 
     log.info("instantiating Kinesis client with endpoint: {}", kinesisEndpoint);
-    amazonKinesisClient = new AmazonKinesisClient();
-    amazonKinesisClient.setEndpoint(kinesisEndpoint);
-    
+    AwsClientBuilder.EndpointConfiguration endpointConfiguration
+        = new AwsClientBuilder.EndpointConfiguration(kinesisEndpoint, "local");
+    amazonKinesis = AmazonKinesisClient.builder().withEndpointConfiguration(endpointConfiguration).build();
+
     log.info("creating {} Kinesis stream with shard count of {}", TEST_STREAM, 1);
-    amazonKinesisClient.createStream(TEST_STREAM, 1);
-    
-    Waiter<DescribeStreamRequest> waiter = amazonKinesisClient.waiters().streamExists();
+    amazonKinesis.createStream(TEST_STREAM, 1);
+
+    Waiter<DescribeStreamRequest> waiter = amazonKinesis.waiters().streamExists();
     waiter.run(new WaiterParameters<>(new DescribeStreamRequest().withStreamName(TEST_STREAM)));
-    
-    DescribeStreamResult describeStreamResult = amazonKinesisClient.describeStream(TEST_STREAM);
+
+    DescribeStreamResult describeStreamResult = amazonKinesis.describeStream(TEST_STREAM);
     assertThat(describeStreamResult.getStreamDescription().getStreamName(), is(TEST_STREAM));
 
     log.info("starting KCL worker");
@@ -70,14 +73,11 @@ public class KclWorkerTest {
     kclWorker.start();
 
     // make sure to kill containers
-    Runtime.getRuntime().addShutdownHook(new Thread() {
-      @Override
-      public void run() {
-        log.info("shutting down containers from shutdown hook");
-        dockerKinesis.stop();
-        dockerDynamoDB.stop();
-      }
-    });
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      log.info("shutting down containers from shutdown hook");
+      dockerKinesis.stop();
+      dockerDynamoDB.stop();
+    }));
 
     log.info("setup complete");
   }
@@ -113,7 +113,7 @@ public class KclWorkerTest {
           .withData(data);
 
       log.info(">>> sending: {}", testRecord);
-      amazonKinesisClient.putRecord(putRecordRequest);
+      amazonKinesis.putRecord(putRecordRequest);
       Thread.sleep(2000);
       index++;
     }

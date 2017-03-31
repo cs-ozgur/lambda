@@ -22,7 +22,7 @@ public class ConfigurationUtils {
         userAgent.append("/");
         userAgent.append(VERSION);
 
-        config.setUserAgent(userAgent.toString());
+        config.setUserAgentPrefix(userAgent.toString());
 
         return config;
     }

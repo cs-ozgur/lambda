@@ -1,8 +1,10 @@
 package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
@@ -35,28 +37,30 @@ public class KclWorker {
     this.workerId = streamName + "-worker-" + UUID.randomUUID();
     log.info("initializing worker {}", this.workerId);
 
-    KinesisClientLibConfiguration kclConfig
-        = new KinesisClientLibConfiguration(getApplicationName(), streamName, credentialsProvider, this.workerId)
-        .withKinesisEndpoint(kinesisEndpoint)
+    KinesisClientLibConfiguration kclConfig = new KinesisClientLibConfiguration(getApplicationName(), streamName, credentialsProvider, this.workerId)
         .withCommonClientConfig(ConfigurationUtils.getClientConfigWithUserAgent());
 
-    AmazonKinesis amazonKinesis = new AmazonKinesisClient(credentialsProvider);
-    amazonKinesis.setEndpoint(kclConfig.getKinesisEndpoint());
+    AmazonKinesis amazonKinesis = AmazonKinesisClient.builder()
+        .withCredentials(credentialsProvider)
+        .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(kinesisEndpoint, "local"))
+        .build();
     log.info("Kinesis client initialized with endpoint {}", kclConfig.getKinesisEndpoint());
 
-    AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(credentialsProvider);
-    dynamoDBClient.setEndpoint(dynamoDbEndpoint);
+    AmazonDynamoDB dynamoDBClient = AmazonDynamoDBClient.builder()
+        .withCredentials(credentialsProvider)
+        .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(dynamoDbEndpoint, "local"))
+        .build();
     log.info("DynamoDB client initialized with endpoint {}", dynamoDbEndpoint);
 
-    AmazonCloudWatch amazonCloudWatch = new AmazonCloudWatchClient(credentialsProvider);
+    AmazonCloudWatch amazonCloudWatch = AmazonCloudWatchClient.builder().withCredentials(credentialsProvider).build();
     log.info("CloudWatch client initialized");
 
     this.worker = new Worker.Builder()
         .recordProcessorFactory(new RecordProcessorFactory(lambdaServerEndpoint))
-        .config(kclConfig)
-        .kinesisClient(amazonKinesis)
-        .dynamoDBClient(dynamoDBClient)
         .cloudWatchClient(amazonCloudWatch)
+        .config(kclConfig)
+        .dynamoDBClient(dynamoDBClient)
+        .kinesisClient(amazonKinesis)
         .build();
   }
 
@@ -68,7 +72,7 @@ public class KclWorker {
     try {
       log.info("starting worker {}", workerId);
       Thread workerThread = new Thread(worker, getWorkerId());
-      workerThread.start();   
+      workerThread.start();
     } catch (Throwable t) {
       log.error("Caught throwable while processing data", t);
     }

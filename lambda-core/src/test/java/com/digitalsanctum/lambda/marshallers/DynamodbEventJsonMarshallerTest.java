@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.amazonaws.protocol.json.SdkStructuredPlainJsonFactory.JSON_FACTORY;
+import static com.amazonaws.protocol.json.SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -64,8 +66,8 @@ public class DynamodbEventJsonMarshallerTest {
       .operationIdentifier("DynamoDB_20120810.PutDynamodbEvent") // best guess
       .serviceName("AmazonDynamoDBv2")
       .build();
-  
-  
+
+
   @Test
   public void testMarshalDynamodbEvent() throws Exception {
 
@@ -115,20 +117,21 @@ public class DynamodbEventJsonMarshallerTest {
 
     InputStream inputJson = request.getContent();
 
-    JsonParser jsonParser = SdkStructuredPlainJsonFactory.JSON_FACTORY.createParser(inputJson);
+    JsonParser jsonParser = JSON_FACTORY.createParser(inputJson);
     JsonUnmarshallerContext jsonUnmarshallerContext
-        = new JsonUnmarshallerContextImpl(jsonParser, SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS, null);
+        = new JsonUnmarshallerContextImpl(jsonParser, JSON_SCALAR_UNMARSHALLERS, null);
 
     Object unmarshalledObject = DynamodbEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
-    
+
     // assertions
-    
+
     assertThat(unmarshalledObject.getClass().getName(), is(DynamodbEvent.class.getName()));
-    
+
     DynamodbEvent unmarshalledEvent = (DynamodbEvent) unmarshalledObject;
     assertThat(unmarshalledEvent.getRecords().size(), is(originalDynamodbEvent.getRecords().size()));
-    assertThat(unmarshalledEvent.getRecords().get(0).getDynamodb().getClass().getName(), is(originalDynamodbEvent.getRecords().get(0).getDynamodb().getClass().getName()));
+    assertThat(unmarshalledEvent.getRecords().get(0).getDynamodb().getClass().getName(),
+        is(originalDynamodbEvent.getRecords().get(0).getDynamodb().getClass().getName()));
   }
 
   /*
@@ -160,5 +163,5 @@ public class DynamodbEventJsonMarshallerTest {
     }
    */
 
-  
+
 }

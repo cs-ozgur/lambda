@@ -32,11 +32,11 @@ import java.nio.charset.Charset;
  * @since 4/3/16
  */
 public class RecordProcessor implements IRecordProcessor {
-  
+
   private static final Logger log = LoggerFactory.getLogger(RecordProcessor.class);
-  
+
   private static final ObjectMapper mapper = new ObjectMapper();
-  
+
   private String kinesisShardId;
   private final String lambdaServerEndpoint;
 
@@ -74,11 +74,11 @@ public class RecordProcessor implements IRecordProcessor {
     log.info("<<< received: {}", data);
 
     // TODO send to subscribed event sinks        
-    try {
+    /*try {
       invokeLambda(bb);
     } catch (JsonProcessingException e) {
       log.error("Error invoking lambda", e);
-    }
+    }*/
   }
 
   private String getTestKinesisEvent(ByteBuffer toSend) throws JsonProcessingException {
@@ -87,15 +87,15 @@ public class RecordProcessor implements IRecordProcessor {
     KinesisEvent.KinesisEventRecord record = new KinesisEvent.KinesisEventRecord();
     record.setEventID("id");
     record.setEventName("eventname");
-    
+
     KinesisEvent.Record kinesis = new KinesisEvent.Record();
     kinesis.setPartitionKey(String.valueOf(System.currentTimeMillis()));
     kinesis.setSequenceNumber(String.valueOf(System.currentTimeMillis()));
     kinesis.setData(toSend);
     record.setKinesis(kinesis);
-    
+
     event.setRecords(ImmutableList.of(record));
-    
+
     return new String(mapper.writeValueAsBytes(event));
   }
 
@@ -111,7 +111,6 @@ public class RecordProcessor implements IRecordProcessor {
     AwsClientBuilder.EndpointConfiguration endpointConfiguration
         = new AwsClientBuilder.EndpointConfiguration(lambdaServerEndpoint, "local");
     AWSLambda awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
-    
     InvokeResult result = awsLambda.invoke(invokeRequest);
     System.out.println(result);
   }
@@ -141,10 +140,5 @@ public class RecordProcessor implements IRecordProcessor {
     }
   }
 
-  
-
-  
-
-  
 }
 

@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.amazonaws.transform.JsonUnmarshallerContext;
 import com.amazonaws.transform.JsonUnmarshallerContextImpl;
 import com.digitalsanctum.lambda.unmarshallers.DynamodbEventUnmarshaller;
+import com.digitalsanctum.lambda.unmarshallers.KinesisEventUnmarshaller;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -72,14 +73,17 @@ public class Executor implements ResultProvider {
 
       Object inputObj;
       if (paramClassSet.contains(KinesisEvent.class)) {
-        inputObj = mapper.readValue(inputJson, KinesisEvent.class);
-      } else if (paramClassSet.contains(DynamodbEvent.class)) {
-//                inputObj = mapper.readValue(inputJson, DynamodbEvent.class);
 
         JsonParser jsonParser = SdkStructuredPlainJsonFactory.JSON_FACTORY.createParser(inputJson);
-        JsonUnmarshallerContext jsonUnmarshallerContext
-            = new JsonUnmarshallerContextImpl(jsonParser, SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS, null);
+        JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextImpl(jsonParser,
+            SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS, null);
+        inputObj = KinesisEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
+      } else if (paramClassSet.contains(DynamodbEvent.class)) {
+
+        JsonParser jsonParser = SdkStructuredPlainJsonFactory.JSON_FACTORY.createParser(inputJson);
+        JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextImpl(jsonParser,
+            SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS, null);
         inputObj = DynamodbEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
       } else {

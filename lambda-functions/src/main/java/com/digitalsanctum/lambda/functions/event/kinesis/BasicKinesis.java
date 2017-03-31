@@ -1,11 +1,9 @@
 package com.digitalsanctum.lambda.functions.event.kinesis;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.List;
 
 /**
@@ -13,17 +11,23 @@ import java.util.List;
  * @since 8/20/16
  */
 public class BasicKinesis {
+
+  private static final Logger log = LoggerFactory.getLogger(BasicKinesis.class);
   
-  public void handler(KinesisEvent kinesisEvent, Context context) {
-    LambdaLogger logger = context.getLogger();
+  public void handler(KinesisEvent kinesisEvent) {
+    log.info("received KinesisEvent");
+
+    if (kinesisEvent.getRecords().isEmpty()) {
+      log.info("no records!");
+      return;
+    }
     
     List<KinesisEvent.KinesisEventRecord> kinesisEventRecord = kinesisEvent.getRecords();
-
     for (KinesisEvent.KinesisEventRecord eventRecord : kinesisEventRecord) {
       KinesisEvent.Record record = eventRecord.getKinesis();
-      ByteBuffer bb = record.getData();
-      String data = new String(bb.array(), Charset.forName("UTF-8"));
-      logger.log("received: " + data);
+      /*ByteBuffer bb = record.getData();
+      String data = new String(bb.array(), Charset.forName("UTF-8"));*/
+      log.info(record.toString());
     }
   }
 }

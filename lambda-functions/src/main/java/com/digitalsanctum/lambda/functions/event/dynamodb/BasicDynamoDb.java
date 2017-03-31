@@ -16,10 +16,11 @@ public class BasicDynamoDb {
   private static final Logger log = LoggerFactory.getLogger(BasicDynamoDb.class);
 
   public void handler(DynamodbEvent dynamodbEvent) {    
-    log.info("received DynamoDB event");
+    log.info("received DynamoDBEvent");
     
     if (dynamodbEvent.getRecords().isEmpty()) {
       log.info("no records!");
+      return;
     }
     
     List<DynamodbEvent.DynamodbStreamRecord> dynamodbEventRecords = dynamodbEvent.getRecords();

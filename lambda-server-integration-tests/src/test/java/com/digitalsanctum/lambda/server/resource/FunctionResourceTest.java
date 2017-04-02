@@ -18,7 +18,7 @@ import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.util.IOUtils;
 import com.digitalsanctum.lambda.functions.model.ConcatRequest;
-import com.digitalsanctum.lambda.server.AWSLocal;
+import com.digitalsanctum.lambda.lifecycle.AWSLocal;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;

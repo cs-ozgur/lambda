@@ -16,7 +16,7 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
 import com.amazonaws.util.IOUtils;
-import com.digitalsanctum.lambda.server.AWSLocal;
+import com.digitalsanctum.lambda.lifecycle.AWSLocal;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
 import org.junit.After;
 import org.junit.AfterClass;

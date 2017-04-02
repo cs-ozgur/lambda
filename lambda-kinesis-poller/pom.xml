@@ -22,11 +22,7 @@
         </dependency>
         <dependency>
             <groupId>com.digitalsanctum.lambda</groupId>
-            <artifactId>lambda-dynamodb</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.digitalsanctum.lambda</groupId>
-            <artifactId>lambda-kinesis</artifactId>
+            <artifactId>lambda-lifecycle</artifactId>
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>

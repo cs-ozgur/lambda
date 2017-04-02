@@ -14,14 +14,15 @@
         <module>lambda-core</module>
         <module>lambda-docker</module>
         <module>lambda-dynamodb</module>
+        <module>lambda-dynamodb-poller</module>
         <module>lambda-functions</module>
         <module>lambda-kinesis</module>
         <module>lambda-kinesis-poller</module>
+        <module>lambda-lifecycle</module>
         <module>lambda-model</module>
         <module>lambda-proxy</module>
         <module>lambda-server</module>
         <module>lambda-server-integration-tests</module>
-        <module>lambda-dynamodb-poller</module>
     </modules>
 
     <properties>
@@ -111,6 +112,11 @@
             <dependency>
                 <groupId>com.digitalsanctum.lambda</groupId>
                 <artifactId>lambda-dynamodb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.digitalsanctum.lambda</groupId>
+                <artifactId>lambda-lifecycle</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

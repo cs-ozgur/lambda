@@ -1,8 +1,14 @@
 package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
 
+import com.amazonaws.Request;
 import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.protocol.json.SdkJsonGenerator;
-import com.amazonaws.protocol.json.StructuredJsonGenerator;
+import com.amazonaws.http.HttpMethodName;
+import com.amazonaws.protocol.OperationInfo;
+import com.amazonaws.protocol.Protocol;
+import com.amazonaws.protocol.ProtocolRequestMarshaller;
+import com.amazonaws.protocol.json.JsonClientMetadata;
+import com.amazonaws.protocol.json.JsonErrorShapeMetadata;
+import com.amazonaws.protocol.json.SdkJsonProtocolFactory;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.InvalidStateException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ShutdownException;
 import com.amazonaws.services.kinesis.clientlibrary.exceptions.ThrottlingException;
@@ -20,11 +26,14 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.LogType;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
-import com.fasterxml.jackson.core.JsonFactory;
+import com.amazonaws.util.IOUtils;
+import com.digitalsanctum.lambda.transform.marshallers.KinesisEventJsonMarshaller;
 import com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
@@ -35,6 +44,41 @@ import java.nio.charset.Charset;
 public class LambaInvokingRecordProcessor implements IRecordProcessor {
 
   private static final Logger log = LoggerFactory.getLogger(SimpleRecordProcessor.class);
+
+  private static final JsonClientMetadata JSON_CLIENT_METADATA = new JsonClientMetadata()
+      .withProtocolVersion("1.1")
+      .withSupportsCbor(false) // override for Kinesalite
+      .withSupportsIon(false)
+      .addErrorMetadata(
+          new JsonErrorShapeMetadata().withErrorCode("InvalidArgumentException").withModeledClass(
+              com.amazonaws.services.kinesis.model.InvalidArgumentException.class))
+      .addErrorMetadata(
+          new JsonErrorShapeMetadata().withErrorCode("ResourceInUseException").withModeledClass(
+              com.amazonaws.services.kinesis.model.ResourceInUseException.class))
+      .addErrorMetadata(
+          new JsonErrorShapeMetadata().withErrorCode("ResourceNotFoundException").withModeledClass(
+              com.amazonaws.services.kinesis.model.ResourceNotFoundException.class))
+      .addErrorMetadata(
+          new JsonErrorShapeMetadata().withErrorCode("ExpiredIteratorException").withModeledClass(
+              com.amazonaws.services.kinesis.model.ExpiredIteratorException.class))
+      .addErrorMetadata(
+          new JsonErrorShapeMetadata().withErrorCode("ProvisionedThroughputExceededException").withModeledClass(
+              com.amazonaws.services.kinesis.model.ProvisionedThroughputExceededException.class))
+      .addErrorMetadata(
+          new JsonErrorShapeMetadata().withErrorCode("LimitExceededException").withModeledClass(
+              com.amazonaws.services.kinesis.model.LimitExceededException.class))
+      .withBaseServiceExceptionClass(com.amazonaws.services.kinesis.model.AmazonKinesisException.class);
+
+
+  private static final OperationInfo SDK_OPERATION_BINDING = OperationInfo.builder()
+      .protocol(Protocol.AWS_JSON)
+      .requestUri("/")
+      .httpMethodName(HttpMethodName.POST)
+      .hasExplicitPayloadMember(false)
+      .hasPayloadMembers(true)
+      .operationIdentifier("Kinesis_20131202.PutRecord")
+      .serviceName("AmazonKinesis")
+      .build();
 
   private String kinesisShardId;
 
@@ -88,32 +132,44 @@ public class LambaInvokingRecordProcessor implements IRecordProcessor {
     kinesisEventRecord.setKinesis(kinesis);
     
     // TODO handle batch size. for now, send one record at a time
-
     kinesisEvent.setRecords(ImmutableList.of(kinesisEventRecord));
 
+    // marshal
+    SdkJsonProtocolFactory sdkJsonProtocolFactory = new SdkJsonProtocolFactory(JSON_CLIENT_METADATA);
+    ProtocolRequestMarshaller protocolRequestMarshaller = sdkJsonProtocolFactory
+        .createProtocolMarshaller(SDK_OPERATION_BINDING, null);
+    protocolRequestMarshaller.startMarshalling();
+    KinesisEventJsonMarshaller.getInstance().marshall(kinesisEvent, protocolRequestMarshaller);
+    Request request = protocolRequestMarshaller.finishMarshalling();
 
-//    return new String(mapper.writeValueAsBytes(event));
-
-    // TODO marshal KinesisEvent and set as payload
-
-    /*JsonFactory jsonFactory = new JsonFactory();
-    StructuredJsonGenerator structuredJsonGenerator = new SdkJsonGenerator(jsonFactory, "application/json");
-
-    DynamodbEventJsonMarshaller.getInstance().marshall(event, structuredJsonGenerator);
-
-    return new String(structuredJsonGenerator.getBytes());
+    // convert InputStream to ByteBuffer 
+    InputStream contentInputStream = request.getContent();
+    byte[] contentByteArr = new byte[0];
+    try {
+      contentByteArr = IOUtils.toByteArray(contentInputStream);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    log.info("payload: {}", new String(contentByteArr));
     
+    ByteBuffer payload = ByteBuffer.wrap(contentByteArr);
 
-    
+    // prepare Lambda invoke request with KinesisEvent as payload
     InvokeRequest invokeRequest = new InvokeRequest();
-    invokeRequest.setInvocationType(InvocationType.Event);
-    invokeRequest.setPayload(testRequestJson);
+    invokeRequest.setInvocationType(InvocationType.RequestResponse);
+    invokeRequest.setPayload(payload);
     invokeRequest.setLogType(LogType.Tail);
     invokeRequest.setFunctionName(functionName);
 
-
+    log.info("invoking {}", invokeRequest.toString());
     InvokeResult result = awsLambda.invoke(invokeRequest);
-    System.out.println(result);*/
+    if (result.getFunctionError() != null) {
+      log.error(result.toString());
+    } else {
+      log.info(result.toString());
+    }
+    // TODO handle retries
+    
   }
 
   @Override

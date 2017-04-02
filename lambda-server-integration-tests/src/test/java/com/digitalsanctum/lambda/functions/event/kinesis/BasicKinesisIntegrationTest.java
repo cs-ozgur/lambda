@@ -1,12 +1,9 @@
 package com.digitalsanctum.lambda.functions.event.kinesis;
 
 import com.amazonaws.SDKGlobalConfiguration;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreams;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreamsClient;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
 import com.amazonaws.services.lambda.AWSLambda;
@@ -20,8 +17,7 @@ import com.amazonaws.util.IOUtils;
 import com.amazonaws.waiters.Waiter;
 import com.amazonaws.waiters.WaiterParameters;
 import com.digitalsanctum.lambda.kinesispoller.kinesis.processor.KclWorker;
-import com.digitalsanctum.lambda.kinesispoller.kinesis.processor.LambdaInvokingProcessorFactory;
-import com.digitalsanctum.lambda.server.AWSLocal;
+import com.digitalsanctum.lambda.lifecycle.AWSLocal;
 import com.digitalsanctum.lambda.server.resource.FunctionResourceTest;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
 import org.junit.After;
@@ -190,7 +186,7 @@ public class BasicKinesisIntegrationTest {
     Thread.sleep(30_000);
 */
     
-    // TODO put test record on Kinsesis stream
+    // TODO put test record on Kinesis stream
     
     // TODO poller should consume test record and invoke Lambda with KinesisEvent
 

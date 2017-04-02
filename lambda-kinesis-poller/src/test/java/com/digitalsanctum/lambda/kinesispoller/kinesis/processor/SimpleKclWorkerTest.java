@@ -11,8 +11,7 @@ import com.amazonaws.services.kinesis.model.DescribeStreamResult;
 import com.amazonaws.services.kinesis.model.PutRecordRequest;
 import com.amazonaws.waiters.Waiter;
 import com.amazonaws.waiters.WaiterParameters;
-import com.digitalsanctum.dynamodb.DockerDynamoDB;
-import com.digitalsanctum.kinesis.DockerKinesis;
+import com.digitalsanctum.lambda.lifecycle.AWSLocal;
 import com.google.common.base.Charsets;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -35,21 +34,22 @@ public class SimpleKclWorkerTest {
 
   private static final String TEST_STREAM = "test-stream";
 
-  private static DockerDynamoDB dockerDynamoDB;
+  private static AWSLocal awsLocal;
   private static AmazonKinesis amazonKinesis;
-  private static DockerKinesis dockerKinesis;
   private static KclWorker kclWorker;
 
   @BeforeClass
   public static void setupClazz() throws Exception {
 
-    dockerDynamoDB = new DockerDynamoDB();
-    int dynamoDbPort = dockerDynamoDB.start();
-    String dynamoDbEndpoint = "http://localhost:" + dynamoDbPort;
+    awsLocal = AWSLocal.builder()
+        .enableDynamoDB()
+        .enableKinesisStreams()
+        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
+        .build();
+    awsLocal.start();
 
-    dockerKinesis = new DockerKinesis();
-    int kinesisPort = dockerKinesis.start();
-    String kinesisEndpoint = "http://localhost:" + kinesisPort;
+    String dynamoDbEndpoint = awsLocal.getDynamoDbEndpoint();
+    String kinesisEndpoint = awsLocal.getKinesisEndpoint();
 
     // Kinesalite does not support CBOR
     System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true");
@@ -78,28 +78,12 @@ public class SimpleKclWorkerTest {
     log.info("waiting 30s to allow worker to initialize");
     Thread.sleep(30_000);
 
-    // make sure to kill containers
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      log.info("shutting down containers from shutdown hook");
-      dockerKinesis.stop();
-      dockerDynamoDB.stop();
-    }));
-
     log.info("setup complete");
   }
 
   @AfterClass
   public static void tearDown() throws Exception {
-
-    log.info("stopping KCL worker");
-    kclWorker.stop();
-
-    log.info("stopping Kinesis container");
-    dockerKinesis.stop();
-    System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "");
-
-    log.info("stopping DynamoDB container");
-    dockerDynamoDB.stop();
+    awsLocal.stop();
   }
 
   @Test

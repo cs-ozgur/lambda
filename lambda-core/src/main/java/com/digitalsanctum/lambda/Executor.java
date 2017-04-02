@@ -1,16 +1,14 @@
 package com.digitalsanctum.lambda;
 
-import com.amazonaws.protocol.json.SdkStructuredPlainJsonFactory;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.amazonaws.transform.JsonUnmarshallerContext;
-import com.amazonaws.transform.JsonUnmarshallerContextImpl;
-import com.digitalsanctum.lambda.unmarshallers.DynamodbEventUnmarshaller;
-import com.digitalsanctum.lambda.unmarshallers.KinesisEventUnmarshaller;
-import com.fasterxml.jackson.core.JsonParser;
+import com.digitalsanctum.lambda.transform.JsonUnmarshallerContextFactory;
+import com.digitalsanctum.lambda.transform.unmarshallers.DynamodbEventUnmarshaller;
+import com.digitalsanctum.lambda.transform.unmarshallers.KinesisEventUnmarshaller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,16 +72,14 @@ public class Executor implements ResultProvider {
       Object inputObj;
       if (paramClassSet.contains(KinesisEvent.class)) {
 
-        JsonParser jsonParser = SdkStructuredPlainJsonFactory.JSON_FACTORY.createParser(inputJson);
-        JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextImpl(jsonParser,
-            SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS, null);
+        JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextFactory()
+            .getJsonUnmarshallerContext(inputJson);
         inputObj = KinesisEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
       } else if (paramClassSet.contains(DynamodbEvent.class)) {
 
-        JsonParser jsonParser = SdkStructuredPlainJsonFactory.JSON_FACTORY.createParser(inputJson);
-        JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextImpl(jsonParser,
-            SdkStructuredPlainJsonFactory.JSON_SCALAR_UNMARSHALLERS, null);
+        JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextFactory()
+            .getJsonUnmarshallerContext(inputJson);
         inputObj = DynamodbEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
       } else {

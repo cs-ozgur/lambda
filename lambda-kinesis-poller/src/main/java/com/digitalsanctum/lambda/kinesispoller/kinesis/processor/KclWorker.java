@@ -8,6 +8,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
+import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibConfiguration;
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.digitalsanctum.lambda.kinesispoller.kinesis.config.ConfigurationUtils;
@@ -30,9 +31,9 @@ public class KclWorker {
 
   public KclWorker(String streamName,
                    String kinesisEndpoint,
-                   String dynamoDbEndpoint,
-                   String lambdaServerEndpoint,
-                   AWSCredentialsProvider credentialsProvider) {
+                   String dynamoDbEndpoint,                  
+                   AWSCredentialsProvider credentialsProvider,
+                   IRecordProcessorFactory recordProcessorFactory) {
 
     this.workerId = streamName + "-worker-" + UUID.randomUUID();
     log.info("initializing worker {}", this.workerId);
@@ -56,7 +57,7 @@ public class KclWorker {
     log.info("CloudWatch client initialized");
 
     this.worker = new Worker.Builder()
-        .recordProcessorFactory(new RecordProcessorFactory(lambdaServerEndpoint))
+        .recordProcessorFactory(recordProcessorFactory)
         .cloudWatchClient(amazonCloudWatch)
         .config(kclConfig)
         .dynamoDBClient(dynamoDBClient)

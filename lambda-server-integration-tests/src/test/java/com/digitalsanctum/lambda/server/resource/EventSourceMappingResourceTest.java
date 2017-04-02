@@ -1,11 +1,14 @@
 package com.digitalsanctum.lambda.server.resource;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreams;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreamsClient;
 import com.amazonaws.services.dynamodbv2.model.*;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
@@ -13,10 +16,12 @@ import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
 import com.amazonaws.util.IOUtils;
-import com.digitalsanctum.lambda.server.LocalBaseTest;
+import com.digitalsanctum.lambda.server.AWSLocal;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -46,7 +51,7 @@ import static org.junit.Assert.assertThat;
  * @author Shane Witbeck
  * @since 3/9/17
  */
-public class EventSourceMappingResourceTest extends LocalBaseTest {
+public class EventSourceMappingResourceTest {
 
   private static final Logger log = LoggerFactory.getLogger(EventSourceMappingResourceTest.class);
 
@@ -55,13 +60,34 @@ public class EventSourceMappingResourceTest extends LocalBaseTest {
   private static final String FUNCTION_HANDLER = "com.digitalsanctum.lambda.functions.event.dynamodb.BasicDynamoDb::handler";
   private static final long RCU = 1L, WCU = 1L;
 
+  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8080";
+
+  private static AWSLocal awsLocal;
+
   private LocalFileSystemService localFileSystemService;
   private AmazonDynamoDBStreams amazonDynamoDBStreams;
   private AmazonDynamoDB amazonDynamoDB;
+  private AWSLambda awsLambda;
+
+  @BeforeClass
+  public static void before() throws Exception {
+
+    awsLocal = AWSLocal.builder()
+        .enableDynamoDB()
+        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
+        .build();
+    awsLocal.start();
+
+    log.info("setup complete");
+  }
+
+  @AfterClass
+  public static void after() throws Exception {
+    awsLocal.stop();
+  }
 
   @Before
   public void setup() throws Exception {
-    super.setup();
 
     // instantiate DynamoDB client to point to local DynamoDB
     String dynamoDbEndpoint = awsLocal.getDynamoDbEndpoint();
@@ -73,6 +99,10 @@ public class EventSourceMappingResourceTest extends LocalBaseTest {
     amazonDynamoDBStreams = AmazonDynamoDBStreamsClient.builder()
         .withEndpointConfiguration(dynamoDbEndpointConfiguration)
         .build();
+
+    AwsClientBuilder.EndpointConfiguration endpointConfiguration
+        = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, awsLocal.getSigningRegion());
+    awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
 
     localFileSystemService = new LocalFileSystemService();
     deleteAllEventSourceMappings();
@@ -185,6 +215,42 @@ public class EventSourceMappingResourceTest extends LocalBaseTest {
     });
   }
  
+  /*
+  private String getTestDynamodbEvent() {
+
+    StreamRecord streamRecord = new StreamRecord()
+        .withStreamViewType("NEW_AND_OLD_IMAGES")
+        .withSequenceNumber("111")
+        .withSizeBytes(26L)
+        .withApproximateCreationDateTime(new Date(1485566940000L))
+        .withKeys(of(
+            "Id", new AttributeValue().withN("101")
+        ))
+        .withNewImage(of(
+            "Message", new AttributeValue("New item!"),
+            "Id", new AttributeValue().withN("101")
+        ));
+
+    DynamodbEvent.DynamodbStreamRecord record = new DynamodbEvent.DynamodbStreamRecord();
+    record.setEventSourceARN("arn:aws:dynamodb:us-west-2:account-id:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899");
+    record.setAwsRegion("us-west-2");
+    record.setDynamodb(streamRecord);
+    record.setEventID("1");
+    record.setEventName("INSERT");
+    record.setEventSource("aws:dynamodb");
+    record.setEventVersion("1.0");
+
+    DynamodbEvent event = new DynamodbEvent();
+    event.setRecords(ImmutableList.of(record));
+
+    JsonFactory jsonFactory = new JsonFactory();
+    StructuredJsonGenerator structuredJsonGenerator = new SdkJsonGenerator(jsonFactory, "application/json");
+
+    DynamodbEventJsonMarshaller.getInstance().marshall(event, structuredJsonGenerator);
+
+    return new String(structuredJsonGenerator.getBytes());
+  }
+   */
 
 
   @Test

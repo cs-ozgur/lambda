@@ -13,6 +13,10 @@
     <name>DynamoDB Poller</name>
 
     <dependencies>
-        
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>dynamodb-streams-kinesis-adapter</artifactId>
+            <version>1.2.0-SNAPSHOT</version>
+        </dependency>    
     </dependencies>
 </project>

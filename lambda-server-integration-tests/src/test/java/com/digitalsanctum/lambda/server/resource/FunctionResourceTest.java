@@ -1,5 +1,8 @@
 package com.digitalsanctum.lambda.server.resource;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.DeleteFunctionRequest;
@@ -15,7 +18,7 @@ import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.util.IOUtils;
 import com.digitalsanctum.lambda.functions.model.ConcatRequest;
-import com.digitalsanctum.lambda.server.LocalBaseTest;
+import com.digitalsanctum.lambda.server.AWSLocal;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
@@ -23,7 +26,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -38,9 +46,13 @@ import static org.junit.Assert.assertNotNull;
  * @author Shane Witbeck
  * @since 7/17/16
  */
-public class FunctionResourceTest extends LocalBaseTest {
+public class FunctionResourceTest {
+
+  private static final Logger log = LoggerFactory.getLogger(FunctionResourceTest.class);
 
   private static final ObjectMapper mapper = new ObjectMapper();
+
+  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8080";
 
   private static final String TEST_FUNCTION_NAME = "concat";
   static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
@@ -48,6 +60,32 @@ public class FunctionResourceTest extends LocalBaseTest {
   private static final String TEST_HANDLER = "com.digitalsanctum.lambda.functions.requestresponse.Concat";
   private static final String TEST_ARN = "arn:aws:lambda:local:111000111000:function:" + TEST_FUNCTION_NAME;
   private static final int TEST_TIMEOUT = 30;
+
+  private static AWSLocal awsLocal;
+  private AWSLambda awsLambda;
+
+  @BeforeClass
+  public static void before() throws Exception {
+
+    awsLocal = AWSLocal.builder()
+        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
+        .build();
+    awsLocal.start();
+
+    log.info("setup complete");
+  }
+
+  @AfterClass
+  public static void after() throws Exception {
+    awsLocal.stop();
+  }
+  
+  @Before
+  public void setup() throws Exception {
+    AwsClientBuilder.EndpointConfiguration endpointConfiguration
+        = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, awsLocal.getSigningRegion());
+    awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
+  }
 
   @Test
   public void testHealthcheck() throws Exception {

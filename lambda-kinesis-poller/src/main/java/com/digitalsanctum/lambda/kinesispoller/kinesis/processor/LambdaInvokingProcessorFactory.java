@@ -20,6 +20,6 @@ public class LambdaInvokingProcessorFactory implements IRecordProcessorFactory {
   }
 
   @Override public IRecordProcessor createProcessor() {
-    return new LambaInvokingRecordProcessor(lambdaEndpointConfiguration, functionName);
+    return new LambdaInvokingRecordProcessor(lambdaEndpointConfiguration, functionName);
   }
 }

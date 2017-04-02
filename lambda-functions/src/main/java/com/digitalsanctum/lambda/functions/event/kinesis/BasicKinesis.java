@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.List;
 
 /**
@@ -25,9 +27,11 @@ public class BasicKinesis {
     List<KinesisEvent.KinesisEventRecord> kinesisEventRecord = kinesisEvent.getRecords();
     for (KinesisEvent.KinesisEventRecord eventRecord : kinesisEventRecord) {
       KinesisEvent.Record record = eventRecord.getKinesis();
-      /*ByteBuffer bb = record.getData();
-      String data = new String(bb.array(), Charset.forName("UTF-8"));*/
       log.info(record.toString());
+
+      ByteBuffer bb = record.getData();
+      String data = new String(bb.array(), Charset.forName("UTF-8"));
+      log.info("data: {}", data);
     }
   }
 }

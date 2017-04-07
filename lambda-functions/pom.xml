@@ -109,7 +109,7 @@
                                     <version>${project.version}</version>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}/../../lambda-kinesis-poller/src/test/resources/test-functions</outputDirectory>
+                                    <outputDirectory>${project.build.directory}/../../lambda-poller/src/test/resources/test-functions</outputDirectory>
                                     <destFileName>lambda.jar</destFileName>
                                 </artifactItem>
                             </artifactItems>

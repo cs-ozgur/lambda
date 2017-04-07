@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.amazonaws.services.lambda.model.EventSourcePosition.TRIM_HORIZON;
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static com.digitalsanctum.lambda.server.resource.FunctionResourceTest.TEST_LAMBDA_JAR;
 import static com.digitalsanctum.lambda.server.resource.FunctionResourceTest.TEST_RUNTIME;
 import static com.digitalsanctum.lambda.service.localfile.LocalFileEventSourceMappingService.MAPPING_SUFFIX;
@@ -72,11 +73,10 @@ public class EventSourceMappingResourceTest {
   @BeforeClass
   public static void before() throws Exception {
 
-    awsLocal = AWSLocal.builder()
+    awsLocal = AWSLocal.builder(FILESYSTEM)
         .enableDynamoDB()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
-        .build();
-    awsLocal.start();
+        .build()
+        .start();
 
     log.info("setup complete");
   }
@@ -110,16 +110,11 @@ public class EventSourceMappingResourceTest {
 
   @After
   public void afterTest() throws Exception {
-//    deleteAllEventSourceMappings();
+    deleteAllEventSourceMappings();
   }
 
   @Test
-//  @Ignore
   public void createEventSourceMapping() throws Exception {
-
-    // instantiate DynamoDB client to point to local DynamoDB
-    String dynamoDbEndpoint = awsLocal.getDynamoDbEndpoint();
-    EndpointConfiguration dynamoDbEndpointConfiguration = new EndpointConfiguration(dynamoDbEndpoint, "local");
 
     // create a DynamoDB table
     String hashKeyAttributeName = "id";

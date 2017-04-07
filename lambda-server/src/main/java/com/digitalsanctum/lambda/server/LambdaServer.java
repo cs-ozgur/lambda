@@ -112,16 +112,24 @@ public class LambdaServer {
     }
   }
 
-  public void start() throws Exception {
-    server.start();
-    running = true;
-    log.info("started on port {}", port);
+  public void start() {
+    try {
+      server.start();
+      running = true;
+      log.info("Lambda started on port {}", port);
+    } catch (Exception e) {
+      log.error("Error starting Lambda", e);
+    }
   }
 
-  public void stop() throws Exception {
-    server.stop();
-    running = false;
-    log.info("stopped");
+  public void stop() {
+    try {
+      server.stop();
+      running = false;
+      log.info("Lambda stopped");
+    } catch (Exception e) {
+      log.error("Error stopping Lambda", e);
+    }
   }
 
   public boolean isRunning() {
@@ -134,8 +142,6 @@ public class LambdaServer {
     if (args != null && args.length == 1) {
       port = Integer.parseInt(args[0]);
     }
-    
-//    LambdaServer lambdaServer = new LambdaServer(port);
     
     LocalFileSystemService localFileSystemService = new LocalFileSystemService();
     LambdaServer lambdaServer = new LambdaServer(

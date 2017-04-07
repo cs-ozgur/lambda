@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import static com.amazonaws.services.lambda.model.EventSourcePosition.TRIM_HORIZON;
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static com.digitalsanctum.lambda.lifecycle.AWSLocal.SIGNING_REGION;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -64,10 +65,9 @@ public class LambdaInvokingRecordProcessorKinesisTest {
   @BeforeClass
   public static void setupClazz() throws Exception {
 
-    awsLocal = AWSLocal.builder()
+    awsLocal = AWSLocal.builder(FILESYSTEM)
         .enableDynamoDB()
         .enableKinesisStreams()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
         .build();
     awsLocal.start();
 

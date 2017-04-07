@@ -68,19 +68,17 @@ You can use the AWS CLI and AWS Java SDK to operate like you normally would with
 
 ## Usage
 
-Start lambda-bridge-server:
+From the command line:
 
-    cd lambda-bridge-server/target    
-    java -jar lambda-bridge-server-1.0-SNAPSHOT.jar
-
-In a separate terminal window, start lambda-server:
-
-    cd lambda-server/target    
-    java -jar lambda-server-1.0-SNAPSHOT.jar 
-   
-will start the server on port 8080 by default. Or provide the port to run on:
+    java -jar lambda-lifecycle/target/lambda-lifecycle-1.0-SNAPSHOT.jar
     
-    java -jar lambda-server-1.0-SNAPSHOT.jar 7000
+From Java code:
+    
+    AWSLocal awsLocal = AWSLocal.builder(AWSLocal.LambdaServiceType.FILESYSTEM)
+        .enableDynamoDB()
+        .enableKinesisStreams()
+        .build()
+        .start();    
 
 ### AWS CLI
     

@@ -16,8 +16,8 @@ import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.util.IOUtils;
 import com.amazonaws.waiters.Waiter;
 import com.amazonaws.waiters.WaiterParameters;
-import com.digitalsanctum.lambda.poller.kinesis.KclWorker;
 import com.digitalsanctum.lambda.lifecycle.AWSLocal;
+import com.digitalsanctum.lambda.poller.kinesis.KclWorker;
 import com.digitalsanctum.lambda.server.resource.FunctionResourceTest;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
 import org.junit.After;
@@ -77,10 +77,9 @@ public class BasicKinesisIntegrationTest {
   @BeforeClass
   public static void before() throws Exception {
 
-    awsLocal = AWSLocal.builder()
+    awsLocal = AWSLocal.builder(AWSLocal.LambdaServiceType.FILESYSTEM)
         .enableDynamoDB()
         .enableKinesisStreams()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
         .build();
     awsLocal.start();
 

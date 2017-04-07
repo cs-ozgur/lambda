@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static com.digitalsanctum.lambda.lifecycle.AWSLocal.SIGNING_REGION;
 import static com.google.common.collect.ImmutableMap.of;
 
@@ -51,9 +52,8 @@ public class DynamoDbStreamsWorkerTest {
   @BeforeClass
   public static void setupClazz() throws Exception {
     
-    AWSLocal awsLocal = AWSLocal.builder()
+    AWSLocal awsLocal = AWSLocal.builder(FILESYSTEM)
         .enableDynamoDB()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
         .build();
     awsLocal.start();
 

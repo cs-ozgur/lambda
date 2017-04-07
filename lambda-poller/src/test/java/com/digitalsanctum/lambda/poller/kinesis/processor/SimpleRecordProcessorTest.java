@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static com.digitalsanctum.lambda.lifecycle.AWSLocal.SIGNING_REGION;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -43,10 +44,9 @@ public class SimpleRecordProcessorTest {
   @BeforeClass
   public static void setupClazz() throws Exception {
 
-    awsLocal = AWSLocal.builder()
+    awsLocal = AWSLocal.builder(FILESYSTEM)
         .enableDynamoDB()
         .enableKinesisStreams()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
         .build();
     awsLocal.start();
 

@@ -39,6 +39,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -67,10 +68,9 @@ public class FunctionResourceTest {
   @BeforeClass
   public static void before() throws Exception {
 
-    awsLocal = AWSLocal.builder()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
-        .build();
-    awsLocal.start();
+    awsLocal = AWSLocal.builder(FILESYSTEM)
+        .build()
+        .start();
 
     log.info("setup complete");
   }
@@ -79,7 +79,7 @@ public class FunctionResourceTest {
   public static void after() throws Exception {
     awsLocal.stop();
   }
-  
+
   @Before
   public void setup() throws Exception {
     AwsClientBuilder.EndpointConfiguration endpointConfiguration
@@ -90,7 +90,7 @@ public class FunctionResourceTest {
   @Test
   public void testHealthcheck() throws Exception {
     CloseableHttpClient httpClient = HttpClients.createDefault();
-    HttpGet request = new HttpGet(LAMBDA_SERVER_ENDPOINT + "/healthcheck"); 
+    HttpGet request = new HttpGet(LAMBDA_SERVER_ENDPOINT + "/healthcheck");
     HttpResponse response = httpClient.execute(request);
     assertEquals(200, response.getStatusLine().getStatusCode());
   }
@@ -119,8 +119,8 @@ public class FunctionResourceTest {
     DeleteFunctionRequest req = new DeleteFunctionRequest();
     req.setFunctionName(TEST_FUNCTION_NAME);
     DeleteFunctionResult result = awsLambda.deleteFunction(req);
-    assertNotNull(result);    
-    
+    assertNotNull(result);
+
     DeleteFunctionRequest deleteFunctionRequest = new DeleteFunctionRequest();
     deleteFunctionRequest.setFunctionName(TEST_FUNCTION_NAME);
     DeleteFunctionResult deleteFunctionResult = awsLambda.deleteFunction(deleteFunctionRequest);
@@ -136,7 +136,7 @@ public class FunctionResourceTest {
 
   @Test
   public void testCreateFunctionRequest() throws Exception {
- 
+
     CreateFunctionRequest createFunctionRequest = new CreateFunctionRequest()
         .withFunctionName(TEST_FUNCTION_NAME)
         .withHandler(TEST_HANDLER)
@@ -145,15 +145,15 @@ public class FunctionResourceTest {
     InputStream is = FunctionResourceTest.class.getResourceAsStream(TEST_LAMBDA_JAR);
     byte[] lambdaByteArr = IOUtils.toByteArray(is);
     ByteBuffer byteBuffer = ByteBuffer.wrap(lambdaByteArr);
-        
+
     FunctionCode code = new FunctionCode().withZipFile(byteBuffer);
     createFunctionRequest.setCode(code);
 
     CreateFunctionResult result = awsLambda.createFunction(createFunctionRequest);
     assertNotNull(result);
-    assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());    
+    assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());
     assertEquals(TEST_ARN, result.getFunctionArn());
-    
+
 
     GetFunctionRequest getFunctionRequest = new GetFunctionRequest().withFunctionName(TEST_FUNCTION_NAME);
     GetFunctionResult getFunctionResult = awsLambda.getFunction(getFunctionRequest);
@@ -162,7 +162,7 @@ public class FunctionResourceTest {
     assertEquals(TEST_FUNCTION_NAME, getFunctionResult.getConfiguration().getFunctionName());
     assertEquals(TEST_RUNTIME, getFunctionResult.getConfiguration().getRuntime());
   }
-  
+
   @Test
   public void testUpdateFunctionCodeRequest() throws Exception {
     createFunction();
@@ -180,25 +180,25 @@ public class FunctionResourceTest {
     invokeRequest.setFunctionName(TEST_FUNCTION_NAME);
 
     InvokeResult invokeResult = awsLambda.invoke(invokeRequest);
-    
+
     ByteBuffer byteBuffer = invokeResult.getPayload();
     ByteBuffer decodedResultPayload = Base64.getDecoder().decode(byteBuffer);
     String resultPayloadJson = new String(decodedResultPayload.array(), Charsets.UTF_8);
     System.out.println(resultPayloadJson);
-    
+
     UpdateFunctionCodeRequest updateFunctionCodeRequest = new UpdateFunctionCodeRequest();
-    updateFunctionCodeRequest.setPublish(true);    
+    updateFunctionCodeRequest.setPublish(true);
   }
 
   /**
    * http://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html
    */
   @Test
-  public void testInvokeRequest_RequestResponse() throws Exception {    
-    createFunction();    
+  public void testInvokeRequest_RequestResponse() throws Exception {
+    createFunction();
     invoke_RequestResponse();
   }
-  
+
   private void createFunction() throws Exception {
 
     CreateFunctionRequest createFunctionRequest = new CreateFunctionRequest()

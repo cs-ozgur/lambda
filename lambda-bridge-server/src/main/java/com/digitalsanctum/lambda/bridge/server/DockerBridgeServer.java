@@ -19,6 +19,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.digitalsanctum.lambda.model.Component.Bridge;
+
 /**
  * @author Shane Witbeck
  * @since 8/8/16
@@ -68,16 +70,24 @@ public class DockerBridgeServer {
     }
   }
 
-  public void start() throws Exception {
-    server.start();
-    running = true;
-    log.info("started on port {}", port);
+  public void start() {
+    try {
+      server.start();
+      running = true;
+      log.info("{} started on port {}", Bridge, port);
+    } catch (Exception e) {
+      log.error("Error starting " + Bridge, e);
+    }  
   }
 
-  public void stop() throws Exception {
-    server.stop();
-    running = false;
-    log.info("stopped");
+  public void stop() {
+    try {
+      server.stop();
+      running = false;
+      log.info("{} stopped", Bridge);
+    } catch (Exception e) {
+      log.error("Error stopping " + Bridge, e);
+    }
   }
   
   public boolean isRunning() {

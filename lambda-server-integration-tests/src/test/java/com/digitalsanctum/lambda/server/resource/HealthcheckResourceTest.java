@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -19,7 +20,7 @@ import static org.junit.Assert.assertEquals;
  * @since 7/25/16
  */
 public class HealthcheckResourceTest {
-  
+
   private static final Logger log = LoggerFactory.getLogger(HealthcheckResourceTest.class);
 
   private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8080";
@@ -29,10 +30,9 @@ public class HealthcheckResourceTest {
   @BeforeClass
   public static void before() throws Exception {
 
-    awsLocal = AWSLocal.builder()
-        .enableLambda(AWSLocal.LambdaServiceType.FILESYSTEM)
-        .build();
-    awsLocal.start();
+    awsLocal = AWSLocal.builder(FILESYSTEM)
+        .build()
+        .start();
 
     log.info("setup complete");
   }
@@ -44,7 +44,7 @@ public class HealthcheckResourceTest {
 
   @Before
   public void setup() throws Exception {
-   
+
   }
 
   @Test

@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.kinesispoller.config;
+package com.digitalsanctum.lambda.poller.config;
 
 import com.amazonaws.ClientConfiguration;
 

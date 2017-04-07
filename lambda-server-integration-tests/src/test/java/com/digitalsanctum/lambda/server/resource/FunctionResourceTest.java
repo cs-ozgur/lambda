@@ -58,7 +58,7 @@ public class FunctionResourceTest {
   static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
   static final String TEST_RUNTIME = "java8";
   private static final String TEST_HANDLER = "com.digitalsanctum.lambda.functions.requestresponse.Concat";
-  private static final String TEST_ARN = "arn:aws:lambda:local:111000111000:function:" + TEST_FUNCTION_NAME;
+  private static final String TEST_ARN = "arn:aws:lambda:local:111111111111:function:" + TEST_FUNCTION_NAME;
   private static final int TEST_TIMEOUT = 30;
 
   private static AWSLocal awsLocal;

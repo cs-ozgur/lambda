@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
+package com.digitalsanctum.lambda.poller.kinesis.processor;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
@@ -22,6 +22,7 @@ import com.amazonaws.services.dynamodbv2.model.StreamViewType;
 import com.amazonaws.services.dynamodbv2.streamsadapter.AmazonDynamoDBStreamsAdapterClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory;
 import com.digitalsanctum.lambda.lifecycle.AWSLocal;
+import com.digitalsanctum.lambda.poller.dynamodb.DynamoDbStreamsWorker;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;

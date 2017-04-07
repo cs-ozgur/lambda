@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
+package com.digitalsanctum.lambda.poller.kinesis.processor;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -22,6 +22,7 @@ import com.amazonaws.util.IOUtils;
 import com.amazonaws.waiters.Waiter;
 import com.amazonaws.waiters.WaiterParameters;
 import com.digitalsanctum.lambda.lifecycle.AWSLocal;
+import com.digitalsanctum.lambda.poller.kinesis.KclWorker;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import com.google.common.base.Charsets;
 import org.junit.AfterClass;

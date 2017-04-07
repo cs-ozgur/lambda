@@ -26,7 +26,7 @@ public class AWSLocal implements Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(AWSLocal.class);
 
-  private static final String SIGNING_REGION = "local";
+  public static final String SIGNING_REGION = "local";
   private static final int BRIDGE_SERVER_PORT = 8082;
   private static final int LAMBDA_SERVER_PORT = 8080;
   private static final String HOST = "localhost";

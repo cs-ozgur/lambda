@@ -16,7 +16,7 @@ import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.util.IOUtils;
 import com.amazonaws.waiters.Waiter;
 import com.amazonaws.waiters.WaiterParameters;
-import com.digitalsanctum.lambda.kinesispoller.kinesis.processor.KclWorker;
+import com.digitalsanctum.lambda.poller.kinesis.KclWorker;
 import com.digitalsanctum.lambda.lifecycle.AWSLocal;
 import com.digitalsanctum.lambda.server.resource.FunctionResourceTest;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
@@ -58,7 +58,7 @@ public class BasicKinesisIntegrationTest {
   private static final String TEST_FUNCTION_JAR = "/test-functions/lambda.jar";
   private static final String FUNCTION_RUNTIME = "java8";
   private static final String FUNCTION_HANDLER = "com.digitalsanctum.lambda.functions.event.kinesis.BasicKinesis::handler";
-  private static final String FUNCTION_ARN = "arn:aws:lambda:local:111000111000:function:" + FUNCTION_NAME;
+  private static final String FUNCTION_ARN = "arn:aws:lambda:local:111111111111:function:" + FUNCTION_NAME;
 
   private static final int LAMBDA_SERVER_PORT = 8080;
 

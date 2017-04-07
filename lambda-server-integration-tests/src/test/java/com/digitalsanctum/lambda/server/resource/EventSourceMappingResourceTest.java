@@ -155,7 +155,7 @@ public class EventSourceMappingResourceTest {
     CreateFunctionResult createFunctionResult = awsLambda.createFunction(createFunctionRequest);
     assertNotNull(createFunctionResult);
     assertEquals(FUNCTION_NAME, createFunctionResult.getFunctionName());
-    assertEquals("arn:aws:lambda:local:111000111000:function:" + FUNCTION_NAME, createFunctionResult.getFunctionArn());
+    assertEquals("arn:aws:lambda:local:111111111111:function:" + FUNCTION_NAME, createFunctionResult.getFunctionArn());
 
     // HACK: invoke the function so function container actually runs    
     /*String payload = getTestDynamodbEvent();

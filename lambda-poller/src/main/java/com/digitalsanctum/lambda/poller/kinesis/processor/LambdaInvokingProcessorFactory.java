@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.kinesispoller.kinesis.processor;
+package com.digitalsanctum.lambda.poller.kinesis.processor;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessor;

@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.poller.kinesis.processor;
+package com.digitalsanctum.lambda.poller.kinesis;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;

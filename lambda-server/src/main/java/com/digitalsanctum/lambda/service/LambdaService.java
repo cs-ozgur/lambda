@@ -40,7 +40,8 @@ public interface LambdaService {
   ListFunctionsResult listFunctions();
 
   default Object invokeFunction(InvokeRequest invokeRequest, FunctionConfiguration functionConfiguration,
-                        FunctionCodeLocation functionCodeLocation) {
+                                FunctionCodeLocation functionCodeLocation) {
+    
     CloseableHttpClient httpClient = HttpClients.createDefault();
     String handler = functionConfiguration.getHandler();
     String location = functionCodeLocation.getLocation();

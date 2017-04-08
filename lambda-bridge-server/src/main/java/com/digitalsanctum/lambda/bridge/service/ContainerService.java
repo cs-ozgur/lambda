@@ -1,13 +1,17 @@
 package com.digitalsanctum.lambda.bridge.service;
 
+import com.digitalsanctum.lambda.model.DeleteContainerRequest;
+import com.digitalsanctum.lambda.model.DeleteContainerResponse;
+import com.digitalsanctum.lambda.model.ListContainersResponse;
 import com.digitalsanctum.lambda.model.RunContainerRequest;
-import com.digitalsanctum.lambda.model.RunContainerResult;
-import com.spotify.docker.client.exceptions.DockerException;
+import com.digitalsanctum.lambda.model.RunContainerResponse;
 
 /**
  * @author Shane Witbeck
  * @since 8/9/16
  */
 public interface ContainerService {
-  RunContainerResult createAndRunContainer(RunContainerRequest runContainerRequest) throws DockerException, InterruptedException;
+  RunContainerResponse createAndRunContainer(RunContainerRequest runContainerRequest);  
+  DeleteContainerResponse deleteContainer(DeleteContainerRequest deleteContainerRequest);
+  ListContainersResponse listContainers();
 }

@@ -11,7 +11,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
-import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.digitalsanctum.lambda.service.LambdaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
@@ -146,7 +146,7 @@ public class InMemoryLambdaService implements LambdaService {
       HttpEntity entity = response.getEntity();
 
       String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
-      CreateImageResult createImageResult = objectMapper.readValue(responseJson.getBytes(), CreateImageResult.class);
+      CreateImageResponse createImageResult = objectMapper.readValue(responseJson.getBytes(), CreateImageResponse.class);
 
       FunctionCode code = new FunctionCode();
       code.setZipFile(updateFunctionCodeRequest.getZipFile());

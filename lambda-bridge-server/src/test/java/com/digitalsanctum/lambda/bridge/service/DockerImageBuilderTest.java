@@ -1,7 +1,7 @@
 package com.digitalsanctum.lambda.bridge.service;
 
 import com.digitalsanctum.lambda.model.CreateImageRequest;
-import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import org.apache.commons.compress.utils.IOUtils;
@@ -39,7 +39,7 @@ public class DockerImageBuilderTest {
     ByteBuffer lambdaByteBuffer = ByteBuffer.wrap(bytes);
     request.setLambdaJar(lambdaByteBuffer);
     
-    CreateImageResult result = dockerImageBuilder.createImage(request);
+    CreateImageResponse result = dockerImageBuilder.createImage(request);
     assertNotNull(result);
     assertNotNull(result.getImageId());
   }

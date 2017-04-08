@@ -1,7 +1,7 @@
 package com.digitalsanctum.lambda.bridge.service;
 
 import com.digitalsanctum.lambda.model.CreateImageRequest;
-import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.digitalsanctum.lambda.model.CreateImageResponse;
 
 import java.util.List;
 
@@ -13,5 +13,5 @@ public interface ImageBuilder<T> {
   
   List<T> getFunctionImages();
 
-  CreateImageResult createImage(CreateImageRequest createImageRequest);
+  CreateImageResponse createImage(CreateImageRequest createImageRequest);
 }

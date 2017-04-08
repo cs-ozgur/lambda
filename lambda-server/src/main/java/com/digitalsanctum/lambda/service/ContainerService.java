@@ -1,7 +1,7 @@
 package com.digitalsanctum.lambda.service;
 
 import com.digitalsanctum.lambda.model.RunContainerRequest;
-import com.digitalsanctum.lambda.model.RunContainerResult;
+import com.digitalsanctum.lambda.model.RunContainerResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
@@ -48,7 +48,7 @@ public class ContainerService {
       runContainerRequest.setImageId(location);
       runContainerRequest.setHandler(handler);
 
-      Optional<RunContainerResult> runContainerResult;
+      Optional<RunContainerResponse> runContainerResult;
       try {
 
         // TODO make endpoint configurable
@@ -63,7 +63,7 @@ public class ContainerService {
 
         HttpEntity entity = response.getEntity();
         String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
-        runContainerResult = Optional.ofNullable(mapper.readValue(responseJson.getBytes(), RunContainerResult.class));
+        runContainerResult = Optional.ofNullable(mapper.readValue(responseJson.getBytes(), RunContainerResponse.class));
 
         // cache the endpoint
         if (runContainerResult.isPresent()) {

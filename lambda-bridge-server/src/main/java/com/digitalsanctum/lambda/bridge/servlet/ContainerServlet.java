@@ -2,11 +2,12 @@ package com.digitalsanctum.lambda.bridge.servlet;
 
 import com.digitalsanctum.lambda.bridge.service.ContainerService;
 import com.digitalsanctum.lambda.bridge.util.RequestUtils;
+import com.digitalsanctum.lambda.model.DeleteContainerRequest;
+import com.digitalsanctum.lambda.model.DeleteContainerResponse;
+import com.digitalsanctum.lambda.model.ListContainersResponse;
 import com.digitalsanctum.lambda.model.RunContainerRequest;
-import com.digitalsanctum.lambda.model.RunContainerResult;
+import com.digitalsanctum.lambda.model.RunContainerResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spotify.docker.client.exceptions.DockerException;
-import org.apache.http.HttpStatus;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -27,24 +28,72 @@ public class ContainerServlet extends HttpServlet {
     this.containerService = containerService;
   }
 
+  /**
+   * Get all containers
+   * 
+   * GET /containers
+   *
+   * @param req
+   * @param resp
+   * @throws ServletException
+   * @throws IOException
+   */
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-      throws ServletException, IOException {
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+    ListContainersResponse listContainersResponse = containerService.listContainers();
+    String resultJson = mapper.writeValueAsString(listContainersResponse);
+
+    // write response
+    resp.setStatus(listContainersResponse.getStatusCode());
+    resp.getWriter().append(resultJson);
+  }
+
+  /**
+   * Create and run a container
+   *
+   * @param req
+   * @param resp
+   * @throws ServletException
+   * @throws IOException
+   */
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
     String json = RequestUtils.readRequestJson(req);
     RunContainerRequest runContainerRequest = mapper.readValue(json, RunContainerRequest.class);
 
     // run the container and return the endpoint
-    RunContainerResult runContainerResult = null;
-    try {
-      runContainerResult = containerService.createAndRunContainer(runContainerRequest);
-    } catch (DockerException | InterruptedException e) {
-      e.printStackTrace();
-    }
-    String resultJson = mapper.writeValueAsString(runContainerResult);
+    RunContainerResponse runContainerResponse = containerService.createAndRunContainer(runContainerRequest);
+    String resultJson = mapper.writeValueAsString(runContainerResponse);
 
-    // write response
-    resp.setStatus(HttpStatus.SC_OK);
+    resp.setStatus(runContainerResponse.getStatusCode());
+    resp.getWriter().append(resultJson);
+  }
+
+  /**
+   * Delete a container
+   * 
+   * DELETE /containers/699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b
+   *
+   * @param req
+   * @param resp
+   * @throws ServletException
+   * @throws IOException
+   */
+  @Override
+  protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+    String pathInfo = req.getPathInfo(); // /699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b
+
+    String id = pathInfo.substring(1); // 699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b    
+
+    DeleteContainerRequest deleteContainerRequest = new DeleteContainerRequest(id);
+
+    DeleteContainerResponse deleteContainerResponse = containerService.deleteContainer(deleteContainerRequest);
+    String resultJson = mapper.writeValueAsString(deleteContainerResponse);
+
+    resp.setStatus(deleteContainerResponse.getStatusCode());
     resp.getWriter().append(resultJson);
   }
 }

@@ -1,7 +1,7 @@
 package com.digitalsanctum.lambda.bridge.service;
 
 import com.digitalsanctum.lambda.model.CreateImageRequest;
-import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.google.common.io.Files;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
@@ -44,7 +44,7 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
   }
 
   @Override
-  public CreateImageResult createImage(CreateImageRequest createImageRequest) {
+  public CreateImageResponse createImage(CreateImageRequest createImageRequest) {
     // create tmp dir
     File tmpDir = Files.createTempDir();
 
@@ -96,7 +96,7 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
       e.printStackTrace();
     }
 
-    CreateImageResult result = new CreateImageResult();
+    CreateImageResponse result = new CreateImageResponse();
     result.setImageId(id);
 
     return result;

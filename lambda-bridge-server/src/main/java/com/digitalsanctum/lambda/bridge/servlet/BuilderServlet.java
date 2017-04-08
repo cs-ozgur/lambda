@@ -3,7 +3,7 @@ package com.digitalsanctum.lambda.bridge.servlet;
 import com.digitalsanctum.lambda.bridge.service.ImageBuilder;
 import com.digitalsanctum.lambda.bridge.util.RequestUtils;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
-import com.digitalsanctum.lambda.model.CreateImageResult;
+import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spotify.docker.client.messages.Image;
@@ -55,7 +55,7 @@ public class BuilderServlet extends HttpServlet {
     CreateImageRequest createImageRequest = mapper.readValue(json, CreateImageRequest.class);
 
     // create the image
-    CreateImageResult result = imageBuilder.createImage(createImageRequest);
+    CreateImageResponse result = imageBuilder.createImage(createImageRequest);
     String resultJson = mapper.writeValueAsString(result);
 
     // write response

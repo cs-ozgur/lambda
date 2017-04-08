@@ -107,11 +107,19 @@ Invoke a function:
     
     aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output.json    
                 
-Update code for a function:
+Update code for a function (update `com.digitalsanctum.lambda.functions.requestresponse.Concat`, cd lambda-functions):
 
+Make a change to `com.digitalsanctum.lambda.functions.requestresponse.Concat` then do the following steps to see your
+change applied to the Lambda function:
+
+    ./mvnw install -pl lambda-functions -am
+            
+    
     aws lambda update-function-code --function-name test1 \
-        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda2.jar \
-        --endpoint-url http://localhost:8080            
+        --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
+        --endpoint-url http://localhost:8080
+                    
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output2.json                    
     
 Delete a function:
 

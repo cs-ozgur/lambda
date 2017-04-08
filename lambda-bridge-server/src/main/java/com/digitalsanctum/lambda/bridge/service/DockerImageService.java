@@ -23,13 +23,13 @@ import java.util.List;
  * @author Shane Witbeck
  * @since 8/8/16
  */
-public class DockerImageBuilder implements ImageBuilder<Image> {
+public class DockerImageService implements ImageService<Image> {
   
-  private static final Logger log = LoggerFactory.getLogger(DockerImageBuilder.class);
+  private static final Logger log = LoggerFactory.getLogger(DockerImageService.class);
   
   private final DockerClient dockerClient;
 
-  public DockerImageBuilder(DockerClient dockerClient) {
+  public DockerImageService(DockerClient dockerClient) {
     this.dockerClient = dockerClient;
   }
 
@@ -49,7 +49,7 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
     File tmpDir = Files.createTempDir();
 
     // copy proxy.jar to tmp dir
-    InputStream proxyIs = DockerImageBuilder.class.getClassLoader().getResourceAsStream("proxy.jar");
+    InputStream proxyIs = DockerImageService.class.getClassLoader().getResourceAsStream("proxy.jar");
     try {
       java.nio.file.Files.copy(proxyIs, tmpDir.toPath().resolve("proxy.jar"));
     } catch (IOException e) {
@@ -73,7 +73,7 @@ public class DockerImageBuilder implements ImageBuilder<Image> {
     }
 
     // copy Dockerfile to tmp dir
-    InputStream dockerfileStream = DockerImageBuilder.class.getClassLoader().getResourceAsStream("Dockerfile");
+    InputStream dockerfileStream = DockerImageService.class.getClassLoader().getResourceAsStream("Dockerfile");
     try {
       java.nio.file.Files.copy(dockerfileStream, Paths.get(tmpDir.getAbsolutePath(), "Dockerfile"));
     } catch (IOException e) {

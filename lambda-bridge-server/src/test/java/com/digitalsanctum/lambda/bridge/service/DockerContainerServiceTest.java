@@ -2,17 +2,24 @@ package com.digitalsanctum.lambda.bridge.service;
 
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
+import com.digitalsanctum.lambda.model.DeleteContainerRequest;
+import com.digitalsanctum.lambda.model.DeleteContainerResponse;
 import com.digitalsanctum.lambda.model.RunContainerRequest;
+import com.digitalsanctum.lambda.model.RunContainerResponse;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import org.apache.commons.compress.utils.IOUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Shane Witbeck
@@ -20,14 +27,14 @@ import static org.junit.Assert.assertNotNull;
  */
 public class DockerContainerServiceTest {
 
-  private ContainerService dockerContainerService;
-  
+  private ContainerService containerService;
+  private String containerId;
 
   @Before
   public void setup() throws Exception {
     final DockerClient dockerClient = DefaultDockerClient.fromEnv().build();
-    DockerImageBuilder dockerImageBuilder = new DockerImageBuilder(dockerClient);
-    dockerContainerService = new DockerContainerService(dockerClient);
+    DockerImageService dockerImageService = new DockerImageService(dockerClient);
+    containerService = new DockerContainerService(dockerClient);
 
     CreateImageRequest request = new CreateImageRequest();
     request.setImageName("test");
@@ -38,9 +45,16 @@ public class DockerContainerServiceTest {
     ByteBuffer lambdaByteBuffer = ByteBuffer.wrap(bytes);
     request.setLambdaJar(lambdaByteBuffer);
 
-    CreateImageResponse result = dockerImageBuilder.createImage(request);
+    CreateImageResponse result = dockerImageService.createImage(request);
     assertNotNull(result);
     assertNotNull(result.getImageId());
+  }
+  
+  @After
+  public void tearDown() throws Exception {
+    DeleteContainerResponse deleteContainerResponse = containerService.deleteContainer(new DeleteContainerRequest(containerId));
+    assertThat(deleteContainerResponse.getStatusCode(), is(200));
+    assertNull(deleteContainerResponse.getErrorMessage());
   }
 
   @Test
@@ -50,6 +64,13 @@ public class DockerContainerServiceTest {
     request.setImageId("test");
     request.setHandler("com.digitalsanctum.lambda.functions.Concat");
     
-    dockerContainerService.createAndRunContainer(request);
+    RunContainerResponse runContainerResponse = containerService.createAndRunContainer(request);
+    containerId = runContainerResponse.getContainerId();
+    
+    assertThat(runContainerResponse.getStatusCode(), is(200));
+    assertNull(runContainerResponse.getErrorMessage());
+    assertNotNull(runContainerResponse.getName());
+    assertNotNull(runContainerResponse.getHostname());
+    assertNotNull(runContainerResponse.getEndpoint());
   }
 }

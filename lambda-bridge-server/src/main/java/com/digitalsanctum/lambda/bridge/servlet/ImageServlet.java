@@ -1,6 +1,6 @@
 package com.digitalsanctum.lambda.bridge.servlet;
 
-import com.digitalsanctum.lambda.bridge.service.ImageBuilder;
+import com.digitalsanctum.lambda.bridge.service.ImageService;
 import com.digitalsanctum.lambda.bridge.util.RequestUtils;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
@@ -22,12 +22,12 @@ import java.util.List;
  * @author Shane Witbeck
  * @since 8/8/16
  */
-public class BuilderServlet extends HttpServlet {
+public class ImageServlet extends HttpServlet {
 
   private static final ObjectMapper mapper = new ObjectMapper();
-  private final ImageBuilder imageBuilder;
+  private final ImageService imageBuilder;
 
-  public BuilderServlet(ImageBuilder imageBuilder) {
+  public ImageServlet(ImageService imageBuilder) {
     this.imageBuilder = imageBuilder;
   }
 

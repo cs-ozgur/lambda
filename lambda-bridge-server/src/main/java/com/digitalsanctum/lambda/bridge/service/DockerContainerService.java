@@ -81,7 +81,7 @@ public class DockerContainerService implements ContainerService {
 
       log.info("Handler={}, Endpoint={}", runContainerRequest.getHandler(), endpoint);
 
-      return new RunContainerResponse(200, info.name(), info.config().hostname(), endpoint);
+      return new RunContainerResponse(200, id, info.name(), info.config().hostname(), endpoint);
     } catch (ContainerNotFoundException cnfe) {
       return new RunContainerResponse(404, cnfe.getMessage());
     } catch (DockerException | InterruptedException de) {

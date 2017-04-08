@@ -2,9 +2,9 @@ package com.digitalsanctum.lambda.bridge.server;
 
 import com.digitalsanctum.lambda.bridge.service.ContainerService;
 import com.digitalsanctum.lambda.bridge.service.DockerContainerService;
-import com.digitalsanctum.lambda.bridge.service.DockerImageBuilder;
-import com.digitalsanctum.lambda.bridge.service.ImageBuilder;
-import com.digitalsanctum.lambda.bridge.servlet.BuilderServlet;
+import com.digitalsanctum.lambda.bridge.service.DockerImageService;
+import com.digitalsanctum.lambda.bridge.service.ImageService;
+import com.digitalsanctum.lambda.bridge.servlet.ImageServlet;
 import com.digitalsanctum.lambda.bridge.servlet.ContainerServlet;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
@@ -48,11 +48,11 @@ public class DockerBridgeServer {
       System.exit(1);
     }
 
-    ImageBuilder imageBuilder = new DockerImageBuilder(dockerClient);
-    BuilderServlet builderServlet = new BuilderServlet(imageBuilder);
+    ImageService imageService = new DockerImageService(dockerClient);
+    ImageServlet builderServlet = new ImageServlet(imageService);
     
-    ServletHolder builderServletHolder = new ServletHolder(builderServlet);
-    sch.addServlet(builderServletHolder, "/images/*");
+    ServletHolder imageServletHolder = new ServletHolder(builderServlet);
+    sch.addServlet(imageServletHolder, "/images/*");
 
     ContainerService containerService = new DockerContainerService(dockerClient);
     ContainerServlet containerServlet = new ContainerServlet(containerService);
@@ -101,7 +101,7 @@ public class DockerBridgeServer {
       port = Integer.parseInt(args[0]);
     }
 
-    DockerBridgeServer imageBuilderServer = new DockerBridgeServer(port);
-    imageBuilderServer.start();
+    DockerBridgeServer dockerBridgeServer = new DockerBridgeServer(port);
+    dockerBridgeServer.start();
   }
 }

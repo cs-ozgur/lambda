@@ -19,12 +19,12 @@ import static org.junit.Assert.assertNotNull;
  */
 public class DockerImageBuilderTest {
 
-  private DockerImageBuilder dockerImageBuilder;
+  private DockerImageService dockerImageBuilder;
 
   @Before
   public void setup() throws Exception {
     final DockerClient dockerClient = DefaultDockerClient.fromEnv().build();
-    dockerImageBuilder = new DockerImageBuilder(dockerClient);
+    dockerImageBuilder = new DockerImageService(dockerClient);
   }
 
   @Test

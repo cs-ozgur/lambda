@@ -9,7 +9,7 @@ import java.util.List;
  * @author Shane Witbeck
  * @since 8/7/16
  */
-public interface ImageBuilder<T> {
+public interface ImageService<T> {
   
   List<T> getFunctionImages();
 

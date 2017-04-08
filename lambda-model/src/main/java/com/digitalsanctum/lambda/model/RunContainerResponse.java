@@ -9,13 +9,15 @@ import java.util.StringJoiner;
  */
 public class RunContainerResponse {
   
+  private String containerId;
   private String name;
   private String hostname;
-  private String endpoint;
+  private String endpoint;  
   private int statusCode;
   private String errorMessage;
 
-  public RunContainerResponse(int statusCode, String name, String hostname, String endpoint) {
+  public RunContainerResponse(int statusCode, String containerId, String name, String hostname, String endpoint) {
+    this.containerId = containerId;
     this.statusCode = statusCode;
     this.name = name;
     this.hostname = hostname;
@@ -28,6 +30,14 @@ public class RunContainerResponse {
   }
 
   public RunContainerResponse() {
+  }
+
+  public String getContainerId() {
+    return containerId;
+  }
+
+  public void setContainerId(String containerId) {
+    this.containerId = containerId;
   }
 
   public String getName() {
@@ -70,6 +80,7 @@ public class RunContainerResponse {
     this.errorMessage = errorMessage;
   }
 
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -77,7 +88,8 @@ public class RunContainerResponse {
 
     RunContainerResponse that = (RunContainerResponse) o;
 
-    return Objects.equals(this.endpoint, that.endpoint) &&
+    return Objects.equals(this.containerId, that.containerId) &&
+        Objects.equals(this.endpoint, that.endpoint) &&
         Objects.equals(this.errorMessage, that.errorMessage) &&
         Objects.equals(this.hostname, that.hostname) &&
         Objects.equals(this.name, that.name) &&
@@ -86,12 +98,13 @@ public class RunContainerResponse {
 
   @Override
   public int hashCode() {
-    return Objects.hash(endpoint, errorMessage, hostname, name, statusCode);
+    return Objects.hash(containerId, endpoint, errorMessage, hostname, name, statusCode);
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
+        .add("containerId = " + containerId)
         .add("endpoint = " + endpoint)
         .add("errorMessage = " + errorMessage)
         .add("hostname = " + hostname)

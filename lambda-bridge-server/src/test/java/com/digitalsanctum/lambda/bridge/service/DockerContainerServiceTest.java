@@ -16,6 +16,8 @@ import org.junit.Test;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_CREATED;
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_OK;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -53,7 +55,7 @@ public class DockerContainerServiceTest {
   @After
   public void tearDown() throws Exception {
     DeleteContainerResponse deleteContainerResponse = containerService.deleteContainer(new DeleteContainerRequest(containerId));
-    assertThat(deleteContainerResponse.getStatusCode(), is(200));
+    assertThat(deleteContainerResponse.getStatusCode(), is(SC_OK));
     assertNull(deleteContainerResponse.getErrorMessage());
   }
 
@@ -67,7 +69,7 @@ public class DockerContainerServiceTest {
     RunContainerResponse runContainerResponse = containerService.createAndRunContainer(request);
     containerId = runContainerResponse.getContainerId();
     
-    assertThat(runContainerResponse.getStatusCode(), is(200));
+    assertThat(runContainerResponse.getStatusCode(), is(SC_CREATED));
     assertNull(runContainerResponse.getErrorMessage());
     assertNotNull(runContainerResponse.getName());
     assertNotNull(runContainerResponse.getHostname());

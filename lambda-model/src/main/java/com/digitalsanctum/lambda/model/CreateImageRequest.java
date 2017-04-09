@@ -11,6 +11,18 @@ public class CreateImageRequest {
   private String imageName;
   private ByteBuffer lambdaJar;
 
+  public CreateImageRequest() {
+  }
+
+  public CreateImageRequest(String imageName) {
+    this.imageName = imageName;
+  }
+
+  public CreateImageRequest(String imageName, ByteBuffer lambdaJar) {
+    this.imageName = imageName;
+    this.lambdaJar = lambdaJar;
+  }
+
   public String getImageName() {
     return imageName;
   }

@@ -3,6 +3,8 @@ package com.digitalsanctum.lambda.model;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_CREATED;
+
 /**
  * @author Shane Witbeck
  * @since 8/9/16
@@ -16,9 +18,9 @@ public class RunContainerResponse {
   private int statusCode;
   private String errorMessage;
 
-  public RunContainerResponse(int statusCode, String containerId, String name, String hostname, String endpoint) {
+  public RunContainerResponse(String containerId, String name, String hostname, String endpoint) {
+    this.statusCode = SC_CREATED;
     this.containerId = containerId;
-    this.statusCode = statusCode;
     this.name = name;
     this.hostname = hostname;
     this.endpoint = endpoint;

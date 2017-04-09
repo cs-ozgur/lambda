@@ -1,35 +1,40 @@
 package com.digitalsanctum.lambda.model;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import static com.digitalsanctum.lambda.model.HttpStatus.SC_CREATED;
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_OK;
 
 /**
  * @author Shane Witbeck
- * @since 8/9/16
+ * @since 4/9/17
  */
-public class CreateImageResponse {
-  private String imageId;
+public class ListImagesResponse {
+
   private int statusCode;
   private String errorMessage;
+  private List<Image> images;
 
-  public CreateImageResponse(String imageId) {
-    this.imageId = imageId;
-    this.statusCode = SC_CREATED;
+  public ListImagesResponse() {
   }
 
-  public CreateImageResponse(int statusCode, String errorMessage) {
+  public ListImagesResponse(List<Image> images) {
+    this.statusCode = SC_OK;
+    this.images = images;
+  }
+
+  public ListImagesResponse(int statusCode, String errorMessage) {
     this.statusCode = statusCode;
     this.errorMessage = errorMessage;
   }
 
-  public String getImageId() {
-    return imageId;
+  public List<Image> getImages() {
+    return images;
   }
 
-  public void setImageId(String imageId) {
-    this.imageId = imageId;
+  public void setImages(List<Image> images) {
+    this.images = images;
   }
 
   public int getStatusCode() {
@@ -54,23 +59,23 @@ public class CreateImageResponse {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    CreateImageResponse that = (CreateImageResponse) o;
+    ListImagesResponse that = (ListImagesResponse) o;
 
     return Objects.equals(this.errorMessage, that.errorMessage) &&
-        Objects.equals(this.imageId, that.imageId) &&
+        Objects.equals(this.images, that.images) &&
         Objects.equals(this.statusCode, that.statusCode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(errorMessage, imageId, statusCode);
+    return Objects.hash(errorMessage, images, statusCode);
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
         .add("errorMessage = " + errorMessage)
-        .add("imageId = " + imageId)
+        .add("images = " + images)
         .add("statusCode = " + statusCode)
         .toString();
   }

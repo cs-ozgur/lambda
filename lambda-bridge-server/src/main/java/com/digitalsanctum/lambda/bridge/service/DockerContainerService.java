@@ -24,6 +24,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_NOT_FOUND;
+import static com.digitalsanctum.lambda.model.HttpStatus.SC_OK;
+
 /**
  * @author Shane Witbeck
  * @since 8/9/16
@@ -81,11 +85,11 @@ public class DockerContainerService implements ContainerService {
 
       log.info("Handler={}, Endpoint={}", runContainerRequest.getHandler(), endpoint);
 
-      return new RunContainerResponse(200, id, info.name(), info.config().hostname(), endpoint);
+      return new RunContainerResponse(id, info.name(), info.config().hostname(), endpoint);
     } catch (ContainerNotFoundException cnfe) {
-      return new RunContainerResponse(404, cnfe.getMessage());
+      return new RunContainerResponse(SC_NOT_FOUND, cnfe.getMessage());
     } catch (DockerException | InterruptedException de) {
-      return new RunContainerResponse(500, de.getMessage());
+      return new RunContainerResponse(SC_INTERNAL_SERVER_ERROR, de.getMessage());
     }
   }
 
@@ -93,11 +97,11 @@ public class DockerContainerService implements ContainerService {
   public DeleteContainerResponse deleteContainer(DeleteContainerRequest deleteContainerRequest) {
     try {
       dockerClient.killContainer(deleteContainerRequest.getContainerId());
-      return new DeleteContainerResponse(200);
+      return new DeleteContainerResponse(SC_OK);
     } catch (NotFoundException nfe) {
-      return new DeleteContainerResponse(404, nfe.getMessage());
+      return new DeleteContainerResponse(SC_NOT_FOUND, nfe.getMessage());
     } catch (DockerException | InterruptedException de) {
-      return new DeleteContainerResponse(500, de.getMessage());
+      return new DeleteContainerResponse(SC_INTERNAL_SERVER_ERROR, de.getMessage());
     }
   }
 
@@ -107,16 +111,15 @@ public class DockerContainerService implements ContainerService {
     try {
       containers = dockerClient.listContainers();
     } catch (DockerException | InterruptedException e) {
-      return new ListContainersResponse(500, e.getMessage());
+      return new ListContainersResponse(SC_INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     if (containers == null || containers.isEmpty()) {
       return new ListContainersResponse();
     }
-
-    List<com.digitalsanctum.lambda.model.Container> containers1 = containers.stream()
+   
+    return new ListContainersResponse(SC_OK, containers.stream()
         .map(container -> new com.digitalsanctum.lambda.model.Container(container.id()))
-        .collect(Collectors.toList());    
-    return new ListContainersResponse(200, containers1);
+        .collect(Collectors.toList()));
   }
 }

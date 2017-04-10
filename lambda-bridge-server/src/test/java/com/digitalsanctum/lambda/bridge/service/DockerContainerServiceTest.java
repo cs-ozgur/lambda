@@ -41,7 +41,6 @@ public class DockerContainerServiceTest {
     CreateImageRequest request = new CreateImageRequest();
     request.setImageName("test");
 
-    // read test jar into ByteBuffer
     InputStream is = DockerImageBuilderTest.class.getClassLoader().getResourceAsStream("lambda.jar");
     byte[] bytes = IOUtils.toByteArray(is);
     ByteBuffer lambdaByteBuffer = ByteBuffer.wrap(bytes);

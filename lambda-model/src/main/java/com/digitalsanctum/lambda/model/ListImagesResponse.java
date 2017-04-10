@@ -1,5 +1,6 @@
 package com.digitalsanctum.lambda.model;
 
+
 import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -14,6 +15,7 @@ public class ListImagesResponse {
 
   private int statusCode;
   private String errorMessage;
+  
   private List<Image> images;
 
   public ListImagesResponse() {

@@ -53,7 +53,7 @@ public class BasicKinesisIntegrationTest {
 
   private static final Logger log = LoggerFactory.getLogger(BasicKinesisIntegrationTest.class);
 
-  private static final String FUNCTION_NAME = "basic-kinesis";
+  private static final String FUNCTION_NAME = "basickinesis";
 
   private static final String TEST_FUNCTION_JAR = "/test-functions/lambda.jar";
   private static final String FUNCTION_RUNTIME = "java8";

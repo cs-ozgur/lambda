@@ -3,6 +3,7 @@ package com.digitalsanctum.lambda.bridge.service;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.digitalsanctum.lambda.model.DeleteImageResponse;
+import com.digitalsanctum.lambda.model.GetImageResponse;
 import com.digitalsanctum.lambda.model.ListImagesResponse;
 import com.google.common.io.Files;
 import com.spotify.docker.client.DockerClient;
@@ -19,6 +20,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.digitalsanctum.lambda.model.HttpStatus.SC_INTERNAL_SERVER_ERROR;
@@ -34,10 +36,12 @@ import static java.nio.file.Files.copy;
 public class DockerImageService implements ImageService {
 
   private static final Logger log = LoggerFactory.getLogger(DockerImageService.class);
-  
+
   private static final String DOCKERFILE = "Dockerfile";
   private static final String LAMBDA_JAR = "lambda.jar";
   private static final String PROXY_JAR = "proxy.jar";
+
+  private static final String UNTAGGED = "<none>:<none>";
 
   private final DockerClient dockerClient;
 
@@ -49,7 +53,10 @@ public class DockerImageService implements ImageService {
   public ListImagesResponse listImages() {
     try {
       List<com.digitalsanctum.lambda.model.Image> images = dockerClient.listImages().stream()
-          .map(image -> new com.digitalsanctum.lambda.model.Image(image.id()))
+          .filter(Objects::nonNull)
+          .filter(image -> image.repoTags() != null && !image.repoTags().isEmpty())
+          .filter(image -> !image.repoTags().contains(UNTAGGED))
+          .map(image -> new com.digitalsanctum.lambda.model.Image(image.id(), image.labels(), image.repoTags()))
           .collect(Collectors.toList());
       return new ListImagesResponse(images);
     } catch (DockerException | InterruptedException e) {
@@ -59,14 +66,14 @@ public class DockerImageService implements ImageService {
 
   @Override
   public CreateImageResponse createImage(CreateImageRequest createImageRequest) {
-    
+
     try {
       ClassLoader classLoader = DockerImageService.class.getClassLoader();
 
       // create tmp dir
       File tmpDir = Files.createTempDir();
       Path tmpDirPath = tmpDir.toPath();
-      
+
       // copy proxy.jar to tmp dir
       InputStream proxyIs = classLoader.getResourceAsStream(PROXY_JAR);
       copy(proxyIs, tmpDirPath.resolve(PROXY_JAR));
@@ -88,11 +95,11 @@ public class DockerImageService implements ImageService {
       log.info("building '{}' image from path: {}", imageName, tmpDirPath);
       String imageId = dockerClient.build(tmpDirPath, imageName);
       return new CreateImageResponse(imageId);
-      
+
     } catch (DockerException | InterruptedException | IOException e) {
       log.error(format("Error building image '%s'", createImageRequest.getImageName()), e);
       return new CreateImageResponse(SC_INTERNAL_SERVER_ERROR, e.getMessage());
-    } 
+    }
   }
 
   @Override public DeleteImageResponse deleteImage(String imageId) {
@@ -105,6 +112,23 @@ public class DockerImageService implements ImageService {
     } catch (DockerException | InterruptedException e) {
       log.error(format("Error deleting image: %s", imageId), e);
       return new DeleteImageResponse(SC_INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+  }
+
+  @Override public GetImageResponse getImage(String imageId) {
+    try {
+      return dockerClient.listImages().stream()
+          .filter(Objects::nonNull)
+          .filter(image -> image.repoTags() != null && !image.repoTags().isEmpty())
+          .filter(image -> !image.repoTags().contains(UNTAGGED))
+          .filter(image -> image.repoTags().contains(imageId + ":latest"))
+          .map(image -> new com.digitalsanctum.lambda.model.Image(image.id(), image.labels(), image.repoTags()))
+          .findFirst()
+          .map(image -> new GetImageResponse(SC_OK, image))
+          .orElseGet(() -> new GetImageResponse(SC_NOT_FOUND, "Image not found"));
+
+    } catch (DockerException | InterruptedException e) {
+      return new GetImageResponse(SC_INTERNAL_SERVER_ERROR, e.getMessage());
     }
   }
 }

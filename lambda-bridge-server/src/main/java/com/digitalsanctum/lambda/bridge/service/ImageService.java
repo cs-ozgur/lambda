@@ -3,6 +3,7 @@ package com.digitalsanctum.lambda.bridge.service;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.digitalsanctum.lambda.model.DeleteImageResponse;
+import com.digitalsanctum.lambda.model.GetImageResponse;
 import com.digitalsanctum.lambda.model.ListImagesResponse;
 
 /**
@@ -16,4 +17,6 @@ public interface ImageService {
   CreateImageResponse createImage(CreateImageRequest createImageRequest);
   
   DeleteImageResponse deleteImage(String imageId);
+  
+  GetImageResponse getImage(String imageId); 
 }

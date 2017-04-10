@@ -6,6 +6,7 @@ import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.digitalsanctum.lambda.model.DeleteContainerRequest;
 import com.digitalsanctum.lambda.model.DeleteImageResponse;
+import com.digitalsanctum.lambda.model.GetImageResponse;
 import com.digitalsanctum.lambda.model.ListImagesResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
@@ -42,11 +43,25 @@ public class ImageServlet extends HttpServlet {
    */
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    ListImagesResponse listImagesResponse = imageService.listImages();
-    String resultJson = mapper.writeValueAsString(listImagesResponse);
 
-    resp.setStatus(listImagesResponse.getStatusCode());
-    resp.getWriter().append(resultJson);
+    String pathInfo = req.getPathInfo(); // /699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b
+    String id = null;
+    if (pathInfo != null && !pathInfo.isEmpty()) {
+      id = pathInfo.substring(1); // 699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b
+    }
+
+    String resultJson;
+    if (id == null || id.isEmpty()) {
+      ListImagesResponse listImagesResponse = imageService.listImages();
+      resultJson = mapper.writeValueAsString(listImagesResponse);
+      resp.setStatus(listImagesResponse.getStatusCode());
+      
+    } else {
+      GetImageResponse getImageResponse = imageService.getImage(id);
+      resultJson = mapper.writeValueAsString(getImageResponse);
+      resp.setStatus(getImageResponse.getStatusCode());
+    }
+    resp.getWriter().append(resultJson);    
   }
 
   /**
@@ -86,7 +101,6 @@ public class ImageServlet extends HttpServlet {
   protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
     String pathInfo = req.getPathInfo(); // /699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b
-
     String id = pathInfo.substring(1); // 699655ad3beedd6d614694d8f2c4754398888f25faf62b6a021c9089c18b275b    
 
     DeleteContainerRequest deleteContainerRequest = new DeleteContainerRequest(id);

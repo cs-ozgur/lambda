@@ -14,6 +14,9 @@ public class CreateImageResponse {
   private int statusCode;
   private String errorMessage;
 
+  public CreateImageResponse() {
+  }
+
   public CreateImageResponse(String imageId) {
     this.imageId = imageId;
     this.statusCode = SC_CREATED;

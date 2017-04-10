@@ -7,21 +7,30 @@ import java.util.StringJoiner;
  * @author Shane Witbeck
  * @since 4/9/17
  */
-public class DeleteImageResponse {
-
+public class GetImageResponse {
+  private Image image;
   private int statusCode;
   private String errorMessage;
 
-  public DeleteImageResponse() {
+  public GetImageResponse() {
   }
 
-  public DeleteImageResponse(int statusCode) {
+  public GetImageResponse(int statusCode, Image image) {
     this.statusCode = statusCode;
+    this.image = image;
   }
 
-  public DeleteImageResponse(int statusCode, String errorMessage) {
+  public GetImageResponse(int statusCode, String errorMessage) {
     this.statusCode = statusCode;
     this.errorMessage = errorMessage;
+  }
+
+  public Image getImage() {
+    return image;
+  }
+
+  public void setImage(Image image) {
+    this.image = image;
   }
 
   public int getStatusCode() {
@@ -46,21 +55,23 @@ public class DeleteImageResponse {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    DeleteImageResponse that = (DeleteImageResponse) o;
+    GetImageResponse that = (GetImageResponse) o;
 
     return Objects.equals(this.errorMessage, that.errorMessage) &&
+        Objects.equals(this.image, that.image) &&
         Objects.equals(this.statusCode, that.statusCode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(errorMessage, statusCode);
+    return Objects.hash(errorMessage, image, statusCode);
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
         .add("errorMessage = " + errorMessage)
+        .add("image = " + image)
         .add("statusCode = " + statusCode)
         .toString();
   }

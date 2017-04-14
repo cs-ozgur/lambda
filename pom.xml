@@ -21,6 +21,7 @@
         <module>lambda-model</module>
         <module>lambda-poller</module>
         <module>lambda-proxy</module>
+        <module>lambda-s3</module>
         <module>lambda-server</module>
         <module>lambda-server-integration-tests</module>
     </modules>
@@ -102,6 +103,11 @@
             <dependency>
                 <groupId>com.digitalsanctum.lambda</groupId>
                 <artifactId>lambda-kinesis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.digitalsanctum.lambda</groupId>
+                <artifactId>lambda-s3</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

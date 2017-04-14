@@ -8,5 +8,6 @@ public enum Component {
   Bridge,
   Lambda,
   DynamoDB,
-  KinesisStreams
+  KinesisStreams,
+  S3
 }

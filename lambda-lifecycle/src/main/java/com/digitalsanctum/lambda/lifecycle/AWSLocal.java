@@ -12,6 +12,7 @@ import com.digitalsanctum.lambda.service.localfile.LocalFileEventSourceMappingSe
 import com.digitalsanctum.lambda.service.localfile.LocalFileLambdaService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
 import com.digitalsanctum.s3.DockerS3;
+import com.digitalsanctum.sqs.DockerSQS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ import static com.digitalsanctum.lambda.model.Component.DynamoDB;
 import static com.digitalsanctum.lambda.model.Component.KinesisStreams;
 import static com.digitalsanctum.lambda.model.Component.Lambda;
 import static com.digitalsanctum.lambda.model.Component.S3;
+import static com.digitalsanctum.lambda.model.Component.SQS;
 
 /**
  * @author Shane Witbeck
@@ -55,6 +57,10 @@ public class AWSLocal implements Closeable {
   private int s3Port;
   private String s3Endpoint;
 
+  private boolean sqsEnabled;
+  private int sqsPort;
+  private String sqsEndpoint;
+
   private LambdaServiceType lambdaServiceType;
 
   private static LambdaServer lambdaServer;
@@ -62,6 +68,7 @@ public class AWSLocal implements Closeable {
   private static DockerDynamoDB dockerDynamoDB;
   private static DockerKinesis dockerKinesis;
   private static DockerS3 dockerS3;
+  private static DockerSQS dockerSQS;
   
   private static Map<Component, String> endpoints = new TreeMap<>();
   
@@ -70,6 +77,7 @@ public class AWSLocal implements Closeable {
     this.kinesisStreamsEnabled = builder.enableKinesisStreams;
     this.lambdaServiceType = builder.lambdaServiceType;
     this.s3Enabled = builder.enableS3;
+    this.sqsEnabled = builder.enableSQS;
   }
 
   public static void main(String[] args) {
@@ -77,6 +85,7 @@ public class AWSLocal implements Closeable {
         .enableDynamoDB()
         .enableKinesisStreams()
         .enableS3()
+        .enableSQS()
         .build()
         .start()
         .dumpEndpoints();
@@ -118,6 +127,13 @@ public class AWSLocal implements Closeable {
       endpoints.put(S3, this.s3Endpoint);
     }
 
+    if (isSqsEnabled()) {
+      dockerSQS = new DockerSQS();
+      this.sqsPort = dockerSQS.start();
+      this.sqsEndpoint = localEndpoint(sqsPort);
+      endpoints.put(SQS, this.sqsEndpoint);
+    }
+
     // make sure to kill containers
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("shutting down containers from shutdown hook");
@@ -129,6 +145,9 @@ public class AWSLocal implements Closeable {
       }
       if (isS3Enabled()) {
         dockerS3.stop();
+      }
+      if (isSqsEnabled()) {
+        dockerSQS.stop();
       }
       dockerBridgeServer.stop();
       lambdaServer.stop();
@@ -171,6 +190,10 @@ public class AWSLocal implements Closeable {
 
   public boolean isS3Enabled() {
     return s3Enabled;
+  }
+
+  public boolean isSqsEnabled() {
+    return sqsEnabled;
   }
 
   public boolean isDynamoDbEnabled() {
@@ -242,6 +265,11 @@ public class AWSLocal implements Closeable {
       log.info("stopping S3 container");
       dockerS3.stop();
     }
+
+    if (isSqsEnabled() && dockerSQS != null) {
+      log.info("stopping SQS container");
+      dockerSQS.stop();
+    }
   }
 
   @Override
@@ -258,6 +286,7 @@ public class AWSLocal implements Closeable {
     private boolean enableKinesisStreams = false;
     private boolean enableDynamoDB = false;
     private boolean enableS3 = false;
+    private boolean enableSQS = false;
     private LambdaServiceType lambdaServiceType;
 
     public Builder(LambdaServiceType lambdaServiceType) {
@@ -276,6 +305,11 @@ public class AWSLocal implements Closeable {
     
     public Builder enableS3() {
       this.enableS3 = true;
+      return this;
+    }
+
+    public Builder enableSQS() {
+      this.enableSQS = true;
       return this;
     }
     

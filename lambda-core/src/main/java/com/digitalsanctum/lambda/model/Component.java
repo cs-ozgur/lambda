@@ -9,5 +9,6 @@ public enum Component {
   Lambda,
   DynamoDB,
   KinesisStreams,
-  S3
+  S3,
+  SQS
 }

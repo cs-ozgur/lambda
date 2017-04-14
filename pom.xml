@@ -24,6 +24,7 @@
         <module>lambda-s3</module>
         <module>lambda-server</module>
         <module>lambda-server-integration-tests</module>
+        <module>lambda-sqs</module>
     </modules>
 
     <properties>

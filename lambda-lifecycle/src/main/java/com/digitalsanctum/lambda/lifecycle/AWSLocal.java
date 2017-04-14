@@ -11,6 +11,7 @@ import com.digitalsanctum.lambda.service.inmemory.InMemoryLambdaService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileEventSourceMappingService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileLambdaService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
+import com.digitalsanctum.redis.DockerElasticacheRedis;
 import com.digitalsanctum.s3.DockerS3;
 import com.digitalsanctum.sqs.DockerSQS;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FIL
 import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.IN_MEMORY;
 import static com.digitalsanctum.lambda.model.Component.Bridge;
 import static com.digitalsanctum.lambda.model.Component.DynamoDB;
+import static com.digitalsanctum.lambda.model.Component.ElasticacheRedis;
 import static com.digitalsanctum.lambda.model.Component.KinesisStreams;
 import static com.digitalsanctum.lambda.model.Component.Lambda;
 import static com.digitalsanctum.lambda.model.Component.S3;
@@ -61,6 +63,10 @@ public class AWSLocal implements Closeable {
   private int sqsPort;
   private String sqsEndpoint;
 
+  private boolean elasticacheRedisEnabled;
+  private int elasticacheRedisPort;
+  private String elasticacheRedisEndpoint;
+  
   private LambdaServiceType lambdaServiceType;
 
   private static LambdaServer lambdaServer;
@@ -69,6 +75,7 @@ public class AWSLocal implements Closeable {
   private static DockerKinesis dockerKinesis;
   private static DockerS3 dockerS3;
   private static DockerSQS dockerSQS;
+  private static DockerElasticacheRedis dockerElasticacheRedis;
   
   private static Map<Component, String> endpoints = new TreeMap<>();
   
@@ -78,11 +85,13 @@ public class AWSLocal implements Closeable {
     this.lambdaServiceType = builder.lambdaServiceType;
     this.s3Enabled = builder.enableS3;
     this.sqsEnabled = builder.enableSQS;
+    this.elasticacheRedisEnabled = builder.enableElasticacheRedis;
   }
 
   public static void main(String[] args) {
     AWSLocal.builder(FILESYSTEM)
         .enableDynamoDB()
+        .enableElasticacheRedis()
         .enableKinesisStreams()
         .enableS3()
         .enableSQS()
@@ -111,6 +120,13 @@ public class AWSLocal implements Closeable {
       this.dynamoDbPort = dockerDynamoDB.start();
       this.dynamoDbEndpoint = localEndpoint(this.dynamoDbPort);      
       endpoints.put(DynamoDB, this.dynamoDbEndpoint);
+    }
+
+    if (isElasticacheRedisEnabled()) {
+      dockerElasticacheRedis = new DockerElasticacheRedis();
+      this.elasticacheRedisPort = dockerElasticacheRedis.start();
+      this.elasticacheRedisEndpoint = localEndpoint(this.elasticacheRedisPort);
+      endpoints.put(ElasticacheRedis, this.elasticacheRedisEndpoint);
     }
     
     if (isKinesisStreamsEnabled()) {
@@ -148,6 +164,9 @@ public class AWSLocal implements Closeable {
       }
       if (isSqsEnabled()) {
         dockerSQS.stop();
+      }
+      if (isElasticacheRedisEnabled()) {
+        dockerElasticacheRedis.stop();
       }
       dockerBridgeServer.stop();
       lambdaServer.stop();
@@ -199,6 +218,8 @@ public class AWSLocal implements Closeable {
   public boolean isDynamoDbEnabled() {
     return dynamoDbEnabled;
   }
+  
+  public boolean isElasticacheRedisEnabled() { return elasticacheRedisEnabled; }
   
   public boolean isLambdaEnabled() {
     return this.lambdaServiceType != null;
@@ -270,6 +291,11 @@ public class AWSLocal implements Closeable {
       log.info("stopping SQS container");
       dockerSQS.stop();
     }
+    
+    if (isElasticacheRedisEnabled() && dockerElasticacheRedis != null) {
+      log.info("stopping Elasticache (Redis) container");
+      dockerElasticacheRedis.stop();
+    }
   }
 
   @Override
@@ -287,6 +313,7 @@ public class AWSLocal implements Closeable {
     private boolean enableDynamoDB = false;
     private boolean enableS3 = false;
     private boolean enableSQS = false;
+    private boolean enableElasticacheRedis = false;
     private LambdaServiceType lambdaServiceType;
 
     public Builder(LambdaServiceType lambdaServiceType) {
@@ -310,6 +337,11 @@ public class AWSLocal implements Closeable {
 
     public Builder enableSQS() {
       this.enableSQS = true;
+      return this;
+    }
+    
+    public Builder enableElasticacheRedis() {
+      this.enableElasticacheRedis = true;
       return this;
     }
     

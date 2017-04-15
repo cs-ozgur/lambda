@@ -89,15 +89,14 @@ public class AWSLocal implements Closeable {
   }
 
   public static void main(String[] args) {
-    AWSLocal.builder(FILESYSTEM)
+    AWSLocal.builder(LambdaServiceType.FILESYSTEM)
         .enableDynamoDB()
         .enableElasticacheRedis()
         .enableKinesisStreams()
         .enableS3()
         .enableSQS()
         .build()
-        .start()
-        .dumpEndpoints();
+        .start();
   }
   
   public void dumpEndpoints() {
@@ -195,6 +194,8 @@ public class AWSLocal implements Closeable {
         log.error("Error starting LambdaServer", e);
       }
     }
+
+    dumpEndpoints();
     
     return this;
   }

@@ -1,12 +1,9 @@
 
 # Lambda
 
-Deploy and invoke AWS Lambda functions locally.
+Develop AWS Lambda functions locally along with supporting AWS infrastructure.
 
 **NOTE: This project continues to be a work in progress. Expect breaking changes.**
-
-
-![Component Diagram](etc/images/component_diagram.png?raw=true "Component Diagram")
 
 
 ## Prerequistes
@@ -15,56 +12,76 @@ Deploy and invoke AWS Lambda functions locally.
 - Maven
 - Docker engine
 
-## build
+## Build
 
     ./mvnw clean install
     
 ## Features
 - Deploy Lambda functions locally and invoke them
-- Compatible with official AWS Lambda APIs
-- Partial support for other AWS resources (see Road map below)
-    - DynamoDB (via containerized DynamoDB Local)
+- Aims for 100% compatibility with official AWS Lambda APIs
+- Streams support (in progress):
+    - DynamoDB Streams (via containerized DynamoDB Local)
     - Kinesis Streams (via containerized kinesalite) 
-- lambda-bridge-server: manages underlying Docker images and containers to support Lambda functions
-- lambda-server: hosts Lambda endpoints; delegates to lambda-bridge-server for CreateFunction and Invoke Lambda actions. 
-
+- Utilizes Docker for:
+    - packaging and running Lambda functions
+    - wrap supporting AWS infrastructure (DynamoDB Local, Kinesalite, etc.)
+- Implements AWS Lambda HTTP endpoints
+- S3 support (via containerized fake-s3)
+- SQS support (via containerized elasticmq)
+- Elasticache Redis support (via containerized redis)
 
 ## Road map
 
-- Support for event sources such as AWS DynamoDB and AWS Kinesis Streams (in progress)
-- S3 (via containerized fake-S3)
-- SQS (via containerized elasticmq)
 - API Gateway
 - CloudFormation
 - Cloudwatch
-- EC2 (via AMI -> container conversion?)
-- Elasticache (via containerized redis)
 - Elasticsearch (via containerized elasticsearch)
 - More examples
 - ?
 
+## Supported AWS Endpoints
 
-## lambda-bridge-server
-
-Serves as a proxy between lambda-server and Docker engine. Responsible for building Docker images that wrap Lambda functions 
-and creating and running Docker containers.
-
-## lambda-server
-
-A standalone server that implements the following AWS Lambda endpoints:
-
-- CreateFunction
-- DeleteFunction
-- GetFunction
-- Invoke
-- ListFunctions
-
-- CreateEventSourceMapping
-- ListEventSourceMappings
-- UpdateEventSourceMapping
+| AWS Service | Supported Endpoints|
+|---|---|
+| Lambda | CreateFunction, DeleteFunction, GetFunction, Invoke, ListFunctions, CreateEventSourceMapping, ListEventSourceMappings, UpdateEventSourceMapping |
+| DynamoDB | All endpoints supported by DynamoDB Local |
+| Kinesis Streams | All endpoints supported by Kinesalite |
 
 
-You can use the AWS CLI and AWS Java SDK to operate like you normally would with real AWS endpoints.
+You can use the AWS CLI and AWS SDK to operate like you normally would with real AWS endpoints.
+
+## Experimental Lifecycle DSL
+
+The following will start the Lambda server and supporting infrastructure:
+
+    AWSLocal awsLocal = AWSLocal.builder(LambdaServiceType.FILESYSTEM)
+            .enableDynamoDB()
+            .enableElasticacheRedis()
+            .enableKinesisStreams()
+            .enableS3()
+            .enableSQS()
+            .build()
+            .start();
+
+    // instantiate DynamoDB client to point to local DynamoDB
+    String dynamoDbEndpoint = awsLocal.getDynamoDbEndpoint();
+    EndpointConfiguration dynamoDbEndpointConfiguration = new EndpointConfiguration(dynamoDbEndpoint, "local");
+    amazonDynamoDB = AmazonDynamoDBClientBuilder.standard()
+        .withEndpointConfiguration(dynamoDbEndpointConfiguration)
+        .build();
+
+    // instantiate Lambda client to point to local Lambda API server
+    AwsClientBuilder.EndpointConfiguration endpointConfiguration
+        = new AwsClientBuilder.EndpointConfiguration("http://localhost:8080", awsLocal.getSigningRegion());
+    awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
+
+    // do some work
+
+    awsLocal.stop();
+
+
+By default, AWS Lambda API endpoints are available at `http://localhost:8080`
+
 
 ## Usage
 

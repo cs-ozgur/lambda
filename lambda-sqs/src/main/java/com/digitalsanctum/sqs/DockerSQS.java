@@ -15,7 +15,7 @@ public class DockerSQS extends AbstractDockerService {
 
   @Override
   public String imageId() {
-    return "expert360/elasticmq";
+    return "expert360/elasticmq:latest";
   }
 
   @Override

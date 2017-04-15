@@ -59,6 +59,15 @@ public class LocalFileLambdaService implements LambdaService {
 
   public LocalFileLambdaService(LocalFileSystemService localFileSystemService) {
     this.localFileSystemService = localFileSystemService;
+    if (!Files.exists(ROOT_DIR)) {
+      log.info("{} not found, creating it", ROOT_DIR.toString());
+      try {
+        Files.createDirectory(ROOT_DIR);
+      } catch (IOException e) {
+        e.printStackTrace();
+        log.error("error creating " + ROOT_DIR.toString(), e);
+      }
+    }
   }
 
   @Override

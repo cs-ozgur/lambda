@@ -15,7 +15,7 @@ public class DockerS3 extends AbstractDockerService {
 
   @Override
   public String imageId() {
-    return "lphoward/fake-s3";
+    return "lphoward/fake-s3:latest";
   }
 
   @Override

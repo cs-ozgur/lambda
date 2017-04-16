@@ -23,7 +23,6 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.http.AmazonHttpClient;
 import com.amazonaws.metrics.RequestMetricCollector;
-import com.amazonaws.regions.Region;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreams;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreamsClient;
 import com.amazonaws.services.dynamodbv2.model.Shard;
@@ -190,26 +189,6 @@ public class AmazonDynamoDBStreamsAdapterClient extends AbstractAmazonKinesis {
    */
   public AmazonDynamoDBStreamsAdapterClient(AmazonDynamoDBStreams amazonDynamoDBStreams) {
     internalClient = amazonDynamoDBStreams;
-  }
-
-  /**
-   * Overrides the default endpoint for this client. Callers can use this method to control which AWS region they want
-   * to work with.
-   *
-   * @param endpoint The region specific AWS endpoint this client will communicate with.
-   */
-  @Override
-  public void setEndpoint(String endpoint) {
-    internalClient.setEndpoint(endpoint);
-  }
-
-  /**
-   * Sets the regional endpoint for this client's service calls. Callers can use this method to control which AWS
-   * region they want to work with.
-   */
-  @Override
-  public void setRegion(Region region) {
-    internalClient.setRegion(region);
   }
 
   /**

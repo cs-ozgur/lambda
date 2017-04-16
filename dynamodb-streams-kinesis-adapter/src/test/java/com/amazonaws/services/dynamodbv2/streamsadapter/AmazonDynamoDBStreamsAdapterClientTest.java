@@ -21,8 +21,6 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.metrics.RequestMetricCollector;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreamsClient;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.DescribeStreamResult;
@@ -55,8 +53,7 @@ import java.util.Date;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.isNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -148,18 +145,6 @@ public class AmazonDynamoDBStreamsAdapterClientTest {
             .withRecords(new java.util.ArrayList<com.amazonaws.services.dynamodbv2.model.Record>()));
     when(mockClient.listStreams(any(com.amazonaws.services.dynamodbv2.model.ListStreamsRequest.class))).thenReturn(
         new com.amazonaws.services.dynamodbv2.model.ListStreamsResult());
-  }
-
-  @Test
-  public void testSetEndpoint() {
-    adapterClient.setEndpoint(TEST_STRING);
-    verify(mockClient).setEndpoint(TEST_STRING);
-  }
-
-  @Test
-  public void testSetRegion() {
-    adapterClient.setRegion(Region.getRegion(Regions.US_WEST_2));
-    verify(mockClient).setRegion(Region.getRegion(Regions.US_WEST_2));
   }
 
   @Test
@@ -378,7 +363,7 @@ public class AmazonDynamoDBStreamsAdapterClientTest {
     ResponseMetadata expectedResponseMetadata = new ResponseMetadata(responseHeaders);
     when(
         mockClient
-            .getCachedResponseMetadata(isNotNull(com.amazonaws.services.dynamodbv2.model.DescribeStreamRequest.class)))
+            .getCachedResponseMetadata(any(com.amazonaws.services.dynamodbv2.model.DescribeStreamRequest.class)))
         .thenReturn(expectedResponseMetadata);
     DescribeStreamRequest describeStreamRequest = new DescribeStreamRequest();
     adapterClient.describeStream(describeStreamRequest);
@@ -389,7 +374,7 @@ public class AmazonDynamoDBStreamsAdapterClientTest {
     GetRecordsRequest getRecordsRequest = new GetRecordsRequest();
     when(
         mockClient
-            .getCachedResponseMetadata(isNotNull(com.amazonaws.services.dynamodbv2.model.GetRecordsRequest.class)))
+            .getCachedResponseMetadata(any(com.amazonaws.services.dynamodbv2.model.GetRecordsRequest.class)))
         .thenReturn(expectedResponseMetadata);
     adapterClient.getRecords(getRecordsRequest);
     actualResponseMetadata = adapterClient.getCachedResponseMetadata(getRecordsRequest);
@@ -399,7 +384,7 @@ public class AmazonDynamoDBStreamsAdapterClientTest {
     GetShardIteratorRequest getShardIteratorRequest = new GetShardIteratorRequest();
     when(
         mockClient
-            .getCachedResponseMetadata(isNotNull(com.amazonaws.services.dynamodbv2.model.GetShardIteratorRequest.class)))
+            .getCachedResponseMetadata(any(com.amazonaws.services.dynamodbv2.model.GetShardIteratorRequest.class)))
         .thenReturn(expectedResponseMetadata);
     adapterClient.getShardIterator(getShardIteratorRequest);
     actualResponseMetadata = adapterClient.getCachedResponseMetadata(getShardIteratorRequest);
@@ -409,7 +394,7 @@ public class AmazonDynamoDBStreamsAdapterClientTest {
     ListStreamsRequest listStreamsRequest = new ListStreamsRequest();
     when(
         mockClient
-            .getCachedResponseMetadata(isNotNull(com.amazonaws.services.dynamodbv2.model.ListStreamsRequest.class)))
+            .getCachedResponseMetadata(any(com.amazonaws.services.dynamodbv2.model.ListStreamsRequest.class)))
         .thenReturn(expectedResponseMetadata);
     adapterClient.listStreams(listStreamsRequest);
     actualResponseMetadata = adapterClient.getCachedResponseMetadata(listStreamsRequest);

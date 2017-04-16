@@ -14,13 +14,13 @@
  */
 package com.amazonaws.services.dynamodbv2.streamsadapter;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBStreamsClientBuilder;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClient;
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.IRecordProcessorFactory;
@@ -28,187 +28,143 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.KinesisClientLibC
 import com.amazonaws.services.kinesis.clientlibrary.lib.worker.Worker;
 import com.amazonaws.services.kinesis.metrics.interfaces.IMetricsFactory;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * The StreamsWorker extends the Kinesis Client Library's Worker
  * class to provide convenient constructors for ease-of-use.
  */
 public class StreamsWorker extends Worker {
 
-    /**
-     * Constructor.
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config) {
-        this(recordProcessorFactory, config, Executors.newCachedThreadPool());
-    }
+  /**
+   * Constructor.
+   *
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config) {
+    this(recordProcessorFactory, config,
+        new AmazonDynamoDBStreamsAdapterClient(AmazonDynamoDBStreamsClientBuilder.standard()
+            .withClientConfiguration(config.getKinesisClientConfiguration())
+            .withCredentials(config.getKinesisCredentialsProvider())
+            .build()),
+        AmazonDynamoDBClientBuilder.standard()
+            .withCredentials(config.getDynamoDBCredentialsProvider())
+            .withClientConfiguration(config.getDynamoDBClientConfiguration())
+            .build(),
+        AmazonCloudWatchClientBuilder.standard()
+            .withClientConfiguration(config.getCloudWatchClientConfiguration())
+            .withCredentials(config.getCloudWatchCredentialsProvider())
+            .build()
+    );
+  }
 
-    /**
-     * Constructor.
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param execService ExecutorService to use for processing records (support for multi-threaded
-     *        consumption)
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            ExecutorService execService) {
-        this(recordProcessorFactory, config,
-                new AmazonDynamoDBStreamsAdapterClient(config.getKinesisCredentialsProvider(),
-                        config.getKinesisClientConfiguration()),
-                new AmazonDynamoDBClient(config.getDynamoDBCredentialsProvider(),
-                        config.getDynamoDBClientConfiguration()),
-                new AmazonCloudWatchClient(config.getCloudWatchCredentialsProvider(),
-                        config.getCloudWatchClientConfiguration()), execService);
-    }
+  /**
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   * @param streamsClient          DynamoDB Streams Adapter Client used for fetching data
+   * @param dynamoDBClient         DynamoDB client used for checkpoints and tracking leases
+   * @param cloudWatchClient       CloudWatch Client for publishing metrics
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config,
+                       AmazonKinesis streamsClient,
+                       AmazonDynamoDB dynamoDBClient,
+                       AmazonCloudWatch cloudWatchClient) {
+    super(recordProcessorFactory, config, streamsClient, dynamoDBClient, cloudWatchClient);
+  }
 
-    /**
-     * Constructor.
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param metricsFactory Metrics factory used to emit metrics
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            IMetricsFactory metricsFactory) {
-        this(recordProcessorFactory, config, metricsFactory, Executors.newCachedThreadPool());
-    }
+  /**
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   * @param streamsClient          DynamoDB Streams Adapter Client used for fetching data
+   * @param dynamoDBClient         DynamoDB client used for checkpoints and tracking leases
+   * @param cloudWatchClient       CloudWatch Client for publishing metrics
+   * @param execService            ExecutorService to use for processing records (support for multi-threaded
+   *                               consumption)
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config,
+                       AmazonKinesis streamsClient,
+                       AmazonDynamoDB dynamoDBClient,
+                       AmazonCloudWatch cloudWatchClient,
+                       ExecutorService execService) {
+    super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
+        cloudWatchClient, execService);
+  }
 
-    /**
-     * Constructor.
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param metricsFactory Metrics factory used to emit metrics
-     * @param execService ExecutorService to use for processing records (support for multi-threaded
-     *        consumption)
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            IMetricsFactory metricsFactory,
-            ExecutorService execService) {
-        this(recordProcessorFactory, config,
-                new AmazonDynamoDBStreamsAdapterClient(config.getKinesisCredentialsProvider(),
-                        config.getKinesisClientConfiguration()),
-                new AmazonDynamoDBClient(config.getDynamoDBCredentialsProvider(),
-                        config.getDynamoDBClientConfiguration()), metricsFactory, execService);
-    }
+  /**
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   * @param streamsClient          DynamoDB Streams Adapter Client used for fetching data
+   * @param dynamoDBClient         DynamoDB client used for checkpoints and tracking leases
+   * @param metricsFactory         Metrics factory used to emit metrics
+   * @param execService            ExecutorService to use for processing records (support for multi-threaded
+   *                               consumption)
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config,
+                       AmazonKinesis streamsClient,
+                       AmazonDynamoDB dynamoDBClient,
+                       IMetricsFactory metricsFactory,
+                       ExecutorService execService) {
+    super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
+        metricsFactory, execService);
+  }
 
-    /**
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param streamsClient DynamoDB Streams Adapter Client used for fetching data
-     * @param dynamoDBClient DynamoDB client used for checkpoints and tracking leases
-     * @param cloudWatchClient CloudWatch Client for publishing metrics
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            AmazonKinesis streamsClient,
-            AmazonDynamoDB dynamoDBClient,
-            AmazonCloudWatch cloudWatchClient) {
-        super(recordProcessorFactory, config, streamsClient, dynamoDBClient, cloudWatchClient);
-    }
+  /**
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   * @param streamsClient          DynamoDB Streams Adapter Client used for fetching data
+   * @param dynamoDBClient         DynamoDB client used for checkpoints and tracking leases
+   * @param cloudWatchClient       CloudWatch Client for publishing metrics
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config,
+                       AmazonKinesisClient streamsClient,
+                       AmazonDynamoDBClient dynamoDBClient,
+                       AmazonCloudWatchClient cloudWatchClient) {
+    super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
+        cloudWatchClient);
+  }
 
-    /**
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param streamsClient DynamoDB Streams Adapter Client used for fetching data
-     * @param dynamoDBClient DynamoDB client used for checkpoints and tracking leases
-     * @param cloudWatchClient CloudWatch Client for publishing metrics
-     * @param execService ExecutorService to use for processing records (support for multi-threaded
-     *        consumption)
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            AmazonKinesis streamsClient,
-            AmazonDynamoDB dynamoDBClient,
-            AmazonCloudWatch cloudWatchClient,
-            ExecutorService execService) {
-        super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
-                cloudWatchClient, execService);
-    }
+  /**
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   * @param streamsClient          DynamoDB Streams Adapter Client used for fetching data
+   * @param dynamoDBClient         DynamoDB client used for checkpoints and tracking leases
+   * @param cloudWatchClient       CloudWatch Client for publishing metrics
+   * @param execService            ExecutorService to use for processing records (support for multi-threaded
+   *                               consumption)
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config,
+                       AmazonKinesisClient streamsClient,
+                       AmazonDynamoDBClient dynamoDBClient,
+                       AmazonCloudWatchClient cloudWatchClient,
+                       ExecutorService execService) {
+    super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
+        cloudWatchClient, execService);
+  }
 
-    /**
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param streamsClient DynamoDB Streams Adapter Client used for fetching data
-     * @param dynamoDBClient DynamoDB client used for checkpoints and tracking leases
-     * @param metricsFactory Metrics factory used to emit metrics
-     * @param execService ExecutorService to use for processing records (support for multi-threaded
-     *        consumption)
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            AmazonKinesis streamsClient,
-            AmazonDynamoDB dynamoDBClient,
-            IMetricsFactory metricsFactory,
-            ExecutorService execService) {
-        super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
-                metricsFactory, execService);
-    }
-
-    /**
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param streamsClient DynamoDB Streams Adapter Client used for fetching data
-     * @param dynamoDBClient DynamoDB client used for checkpoints and tracking leases
-     * @param cloudWatchClient CloudWatch Client for publishing metrics
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            AmazonKinesisClient streamsClient,
-            AmazonDynamoDBClient dynamoDBClient,
-            AmazonCloudWatchClient cloudWatchClient) {
-        super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
-                cloudWatchClient);
-    }
-
-    /**
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param streamsClient DynamoDB Streams Adapter Client used for fetching data
-     * @param dynamoDBClient DynamoDB client used for checkpoints and tracking leases
-     * @param cloudWatchClient CloudWatch Client for publishing metrics
-     * @param execService ExecutorService to use for processing records (support for multi-threaded
-     *        consumption)
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            AmazonKinesisClient streamsClient,
-            AmazonDynamoDBClient dynamoDBClient,
-            AmazonCloudWatchClient cloudWatchClient,
-            ExecutorService execService) {
-        super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
-                cloudWatchClient, execService);
-    }
-
-    /**
-     *
-     * @param recordProcessorFactory Used to get record processor instances for processing data from shards
-     * @param config Kinesis Client Library configuration
-     * @param streamsClient DynamoDB Streams Adapter Client used for fetching data
-     * @param dynamoDBClient DynamoDB client used for checkpoints and tracking leases
-     * @param metricsFactory Metrics factory used to emit metrics
-     * @param execService ExecutorService to use for processing records (support for multi-threaded
-     *        consumption)
-     */
-    public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
-            KinesisClientLibConfiguration config,
-            AmazonKinesisClient streamsClient,
-            AmazonDynamoDBClient dynamoDBClient,
-            IMetricsFactory metricsFactory,
-            ExecutorService execService) {
-        super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
-                metricsFactory, execService);
-    }
+  /**
+   * @param recordProcessorFactory Used to get record processor instances for processing data from shards
+   * @param config                 Kinesis Client Library configuration
+   * @param streamsClient          DynamoDB Streams Adapter Client used for fetching data
+   * @param dynamoDBClient         DynamoDB client used for checkpoints and tracking leases
+   * @param metricsFactory         Metrics factory used to emit metrics
+   * @param execService            ExecutorService to use for processing records (support for multi-threaded
+   *                               consumption)
+   */
+  public StreamsWorker(IRecordProcessorFactory recordProcessorFactory,
+                       KinesisClientLibConfiguration config,
+                       AmazonKinesisClient streamsClient,
+                       AmazonDynamoDBClient dynamoDBClient,
+                       IMetricsFactory metricsFactory,
+                       ExecutorService execService) {
+    super(recordProcessorFactory, config, streamsClient, dynamoDBClient,
+        metricsFactory, execService);
+  }
 
 }

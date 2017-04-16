@@ -60,7 +60,6 @@ public class LambdaInvokingRecordProcessorKinesisTest {
   private static AWSLocal awsLocal;
   private static AmazonKinesis amazonKinesis;
   private static KclWorker kclWorker;
-  private static AWSLambda awsLambda;
 
   @BeforeClass
   public static void setupClazz() throws Exception {
@@ -77,7 +76,7 @@ public class LambdaInvokingRecordProcessorKinesisTest {
 
     AwsClientBuilder.EndpointConfiguration lambdaEndpointConfiguration
         = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, awsLocal.getSigningRegion());
-    awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(lambdaEndpointConfiguration).build();
+    AWSLambda awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(lambdaEndpointConfiguration).build();
 
     // Kinesalite does not support CBOR
     System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true");

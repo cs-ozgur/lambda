@@ -14,21 +14,6 @@
  */
 package com.amazonaws.services.dynamodbv2.streamsadapter.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.whenNew;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.AmazonServiceException.ErrorType;
 import com.amazonaws.auth.AWSCredentials;
@@ -47,9 +32,19 @@ import com.amazonaws.services.dynamodbv2.model.ShardIteratorType;
 import com.amazonaws.services.dynamodbv2.model.TrimmedDataAccessException;
 import com.amazonaws.services.dynamodbv2.streamsadapter.AmazonDynamoDBStreamsAdapterClient;
 import com.amazonaws.services.dynamodbv2.streamsadapter.AmazonDynamoDBStreamsAdapterClient.SkipRecordsBehavior;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
-@PrepareForTest({AmazonDynamoDBStreamsClient.class, AmazonDynamoDBStreamsAdapterClient.class})
-@RunWith(PowerMockRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
 public class AmazonServiceExceptionTransformerTests extends AmazonServiceExceptionTransformer {
 
     private static final AWSCredentials FAKE_CREDS = new BasicAWSCredentials("DummyAccessKey", "DummySecretKey");
@@ -138,11 +133,11 @@ public class AmazonServiceExceptionTransformerTests extends AmazonServiceExcepti
         ase.setStatusCode(statusCode);
     }
 
-    private final AmazonDynamoDBStreamsClient streams = PowerMockito.mock(AmazonDynamoDBStreamsClient.class);
+    private final AmazonDynamoDBStreamsClient streams = Mockito.mock(AmazonDynamoDBStreamsClient.class);
 
     private void doDescribeStreamTest(AmazonServiceException ase, Class<?> expectedResult) throws Exception {
-        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
-        when(streams.describeStream(Matchers.any(DescribeStreamRequest.class))).thenThrow(ase);
+//        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
+        when(streams.describeStream(any(DescribeStreamRequest.class))).thenThrow(ase);
         AmazonDynamoDBStreamsAdapterClient adapterClient = new AmazonDynamoDBStreamsAdapterClient(FAKE_CREDS);
         try {
             adapterClient.describeStream(STREAM_NAME);
@@ -151,13 +146,13 @@ public class AmazonServiceExceptionTransformerTests extends AmazonServiceExcepti
             assertEquals(expectedResult, e.getClass());
             assertSameExceptionProperties(ase, e);
         }
-        verify(streams, Mockito.times(1)).describeStream(Matchers.any(DescribeStreamRequest.class));
+        verify(streams, Mockito.times(1)).describeStream(any(DescribeStreamRequest.class));
     }
 
     private void doGetRecordsTest(AmazonServiceException ase, Class<?> expectedResult,
         SkipRecordsBehavior skipRecordsBehavior) throws Exception {
-        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
-        when(streams.getRecords(Matchers.any(GetRecordsRequest.class))).thenThrow(ase);
+//        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
+        when(streams.getRecords(any(GetRecordsRequest.class))).thenThrow(ase);
         AmazonDynamoDBStreamsAdapterClient adapterClient = new AmazonDynamoDBStreamsAdapterClient(FAKE_CREDS);
         adapterClient.setSkipRecordsBehavior(skipRecordsBehavior);
         try {
@@ -170,13 +165,13 @@ public class AmazonServiceExceptionTransformerTests extends AmazonServiceExcepti
                 assertSameExceptionProperties(ase, (AmazonServiceException) e);
             }
         }
-        verify(streams, Mockito.times(1)).getRecords(Matchers.any(GetRecordsRequest.class));
+        verify(streams, Mockito.times(1)).getRecords(any(GetRecordsRequest.class));
     }
 
     private void doGetShardIteratorTest(AmazonServiceException ase, Class<?> expectedResult,
         SkipRecordsBehavior skipRecordsBehavior, int numCalls) throws Exception {
-        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
-        when(streams.getShardIterator(Matchers.any(GetShardIteratorRequest.class))).thenThrow(ase);
+//        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
+        when(streams.getShardIterator(any(GetShardIteratorRequest.class))).thenThrow(ase);
         AmazonDynamoDBStreamsAdapterClient adapterClient = new AmazonDynamoDBStreamsAdapterClient(FAKE_CREDS);
         adapterClient.setSkipRecordsBehavior(skipRecordsBehavior);
         try {
@@ -189,12 +184,12 @@ public class AmazonServiceExceptionTransformerTests extends AmazonServiceExcepti
                 assertSameExceptionProperties(ase, (AmazonServiceException) e);
             }
         }
-        verify(streams, Mockito.times(numCalls)).getShardIterator(Matchers.any(GetShardIteratorRequest.class));
+        verify(streams, Mockito.times(numCalls)).getShardIterator(any(GetShardIteratorRequest.class));
     }
 
     private void doListStreamsTest(AmazonServiceException ase, Class<?> expectedResult) throws Exception {
-        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
-        when(streams.listStreams(Matchers.any(ListStreamsRequest.class))).thenThrow(ase);
+//        whenNew(AmazonDynamoDBStreamsClient.class).withAnyArguments().thenReturn(streams);
+        when(streams.listStreams(any(ListStreamsRequest.class))).thenThrow(ase);
         AmazonDynamoDBStreamsAdapterClient adapterClient = new AmazonDynamoDBStreamsAdapterClient(FAKE_CREDS);
         try {
             adapterClient.listStreams();
@@ -203,7 +198,7 @@ public class AmazonServiceExceptionTransformerTests extends AmazonServiceExcepti
             assertEquals(expectedResult, e.getClass());
             assertSameExceptionProperties(ase, e);
         }
-        verify(streams, Mockito.times(1)).listStreams(Matchers.any(ListStreamsRequest.class));
+        verify(streams, Mockito.times(1)).listStreams(any(ListStreamsRequest.class));
     }
 
     @Test()

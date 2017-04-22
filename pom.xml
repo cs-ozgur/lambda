@@ -10,7 +10,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>dynamodb-streams-kinesis-adapter</module>
+        <!--<module>dynamodb-streams-kinesis-adapter</module>-->
         <module>lambda-bridge-server</module>
         <module>lambda-core</module>
         <module>lambda-docker</module>
@@ -36,6 +36,7 @@
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
 
         <aws.dynamodblocal.version>[1.11,2.0)</aws.dynamodblocal.version>
+        <aws.dynamodb-streams-kinesis-adapter.version>1.2.0</aws.dynamodb-streams-kinesis-adapter.version>
         <aws-java-sdk.version>1.11.119</aws-java-sdk.version>
         <aws-kinesis-client.version>1.7.5</aws-kinesis-client.version>
         <aws-lambda-java-core.version>1.1.0</aws-lambda-java-core.version>
@@ -71,7 +72,13 @@
     </dependencies>
 
     <dependencyManagement>
+        
         <dependencies>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>dynamodb-streams-kinesis-adapter</artifactId>
+                <version>${aws.dynamodb-streams-kinesis-adapter.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>amazon-kinesis-client</artifactId>

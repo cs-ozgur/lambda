@@ -11,14 +11,13 @@ import com.digitalsanctum.lambda.server.resource.FunctionResource;
 import com.digitalsanctum.lambda.server.resource.HealthcheckResource;
 import com.digitalsanctum.lambda.service.EventSourceMappingService;
 import com.digitalsanctum.lambda.service.LambdaService;
-import com.digitalsanctum.lambda.service.inmemory.InMemoryEventSourceMappingService;
-import com.digitalsanctum.lambda.service.inmemory.InMemoryLambdaService;
+import com.digitalsanctum.lambda.service.LocalFileSystemService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileEventSourceMappingService;
 import com.digitalsanctum.lambda.service.localfile.LocalFileLambdaService;
-import com.digitalsanctum.lambda.service.localfile.LocalFileSystemService;
 import com.digitalsanctum.lambda.service.serialization.CreateEventSourceMappingResultSerializer;
 import com.digitalsanctum.lambda.service.serialization.EventSourceMappingConfigurationSerializer;
 import com.digitalsanctum.lambda.service.serialization.ListEventSourceMappingsResultSerializer;
+import com.digitalsanctum.lambda.util.LocalUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -52,11 +51,8 @@ public class LambdaServer {
   private final EventSourceMappingService eventSourceMappingService;
   private final LambdaService lambdaService;
 
-  public LambdaServer(int port) {    
-    this(port, new InMemoryLambdaService(), new InMemoryEventSourceMappingService());
-  }
-
   public LambdaServer(int port, 
+                      String bridgeServerEndpoint,
                       LambdaService lambdaService,
                       EventSourceMappingService eventSourceMappingService) {
     this.port = port;
@@ -83,7 +79,8 @@ public class LambdaServer {
 
     // resources    
     EventSourceMappingResource eventSourceMappingResource = new EventSourceMappingResource(eventSourceMappingService);
-    FunctionResource functionResource = new FunctionResource(lambdaService);
+    
+    FunctionResource functionResource = new FunctionResource(lambdaService, bridgeServerEndpoint);
     rc.register(eventSourceMappingResource);
     rc.register(functionResource);
     rc.register(new HealthcheckResource());
@@ -143,9 +140,12 @@ public class LambdaServer {
       port = Integer.parseInt(args[0]);
     }
     
+    String bridgeServerEndpoint = LocalUtils.localEndpoint(8082);
+    
     LocalFileSystemService localFileSystemService = new LocalFileSystemService();
     LambdaServer lambdaServer = new LambdaServer(
-        port, 
+        port,
+        bridgeServerEndpoint,
         new LocalFileLambdaService(localFileSystemService), 
         new LocalFileEventSourceMappingService(localFileSystemService)
     );

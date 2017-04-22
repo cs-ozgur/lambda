@@ -12,12 +12,16 @@ import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
-import com.digitalsanctum.lambda.service.LambdaService;
+import com.digitalsanctum.lambda.model.DeleteContainerResponse;
+import com.digitalsanctum.lambda.model.FunctionContainerConfiguration;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
+import com.digitalsanctum.lambda.service.LambdaService;
+import com.digitalsanctum.lambda.service.LocalFileSystemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -36,25 +40,27 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.digitalsanctum.lambda.Configuration.CODE_LOC_SUFFIX;
+import static com.digitalsanctum.lambda.Configuration.CODE_SUFFIX;
+import static com.digitalsanctum.lambda.Configuration.CONFIG_SUFFIX;
+import static com.digitalsanctum.lambda.Configuration.CONTAINER_SUFFIX;
+import static com.digitalsanctum.lambda.Configuration.ROOT_DIR;
 import static java.nio.file.Files.delete;
 
 /**
  * Implementation functionArn LambdaService that persists function code and configuration to the local file system.
- * 
+ *
  * @author Shane Witbeck
  * @since 10/23/16
  */
 public class LocalFileLambdaService implements LambdaService {
 
   private static final Logger log = LoggerFactory.getLogger(LocalFileLambdaService.class);
-  
+
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  private static final Path ROOT_DIR = Paths.get(System.getProperty("user.home"), ".lambda");
-  private static final String CONFIG_SUFFIX = "-config.json";
-  private static final String CODE_SUFFIX = "-code.jar";
-  private static final String CODE_LOC_SUFFIX = "-code-loc.json";
   
+
   private final LocalFileSystemService localFileSystemService;
 
   public LocalFileLambdaService(LocalFileSystemService localFileSystemService) {
@@ -64,8 +70,7 @@ public class LocalFileLambdaService implements LambdaService {
       try {
         Files.createDirectory(ROOT_DIR);
       } catch (IOException e) {
-        e.printStackTrace();
-        log.error("error creating " + ROOT_DIR.toString(), e);
+        log.error("Error creating " + ROOT_DIR.toString(), e);
       }
     }
   }
@@ -137,12 +142,10 @@ public class LocalFileLambdaService implements LambdaService {
     result.setFunctionName(functionName);
     result.setFunctionArn(ArnUtils.functionArn(updateFunctionCodeRequest.getFunctionName()));
 
-    CloseableHttpClient httpclient = HttpClients.createDefault();
-
     // TODO make endpoint configurable
     HttpPost post = new HttpPost("http://localhost:" + 8082 + "/images");
 
-    try {
+    try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
 
       CreateImageRequest request = new CreateImageRequest();
       request.setImageName(updateFunctionCodeRequest.getFunctionName());
@@ -164,7 +167,7 @@ public class LocalFileLambdaService implements LambdaService {
 
       FunctionCode code = new FunctionCode();
       code.setZipFile(updateFunctionCodeRequest.getZipFile());
-      
+
       // write jar with function code to a known file location
       Path codePath = Paths.get(ROOT_DIR.toString(), functionName + CODE_SUFFIX);
       localFileSystemService.write(codePath, byteBuffer.array());
@@ -184,15 +187,44 @@ public class LocalFileLambdaService implements LambdaService {
 
   @Override
   public FunctionConfiguration deleteFunction(String functionName) {
+
+    // get containerId from functionName
+    Path containerConfigPath = Paths.get(ROOT_DIR.toString(), functionName + CONTAINER_SUFFIX);
+    FunctionContainerConfiguration containerConfig = (FunctionContainerConfiguration) localFileSystemService
+        .read(containerConfigPath, FunctionContainerConfiguration.class);
+    if (containerConfig != null) {
+
+      String containerId = containerConfig.getContainerId();
+
+      // kill and remove container
+      try (CloseableHttpClient client = HttpClients.createDefault()) {
+        DeleteContainerResponse deleteContainerResponse = deleteContainer(client, containerId);
+        log.info(deleteContainerResponse.toString());
+
+      } catch (IOException e) {
+        log.error("Error deleting container", e);
+      }
+    }
+
+
     FunctionConfiguration configuration = null;
     try {
       Path path = Paths.get(ROOT_DIR.toString(), functionName + CONFIG_SUFFIX);
       configuration = (FunctionConfiguration) localFileSystemService.read(path, FunctionConfiguration.class);
       delete(path);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Error deleting function", e);
     }
     return configuration;
+  }
+
+  private DeleteContainerResponse deleteContainer(CloseableHttpClient client, String containerId) throws IOException {
+    log.info("Deleting {} container", containerId);
+    HttpDelete delete = new HttpDelete("http://localhost:8082/containers/" + containerId);
+    CloseableHttpResponse response = client.execute(delete);
+    HttpEntity entity = response.getEntity();
+    String responseJson = EntityUtils.toString(entity, Charsets.UTF_8);
+    return mapper.readValue(responseJson.getBytes(), DeleteContainerResponse.class);
   }
 
   @Override
@@ -207,7 +239,7 @@ public class LocalFileLambdaService implements LambdaService {
       listFunctionsResult.setFunctions(functions);
 
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Error listing functions", e);
     }
     return listFunctionsResult;
   }

@@ -17,6 +17,8 @@ import com.amazonaws.services.lambda.model.CreateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.CreateEventSourceMappingResult;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
+import com.amazonaws.services.lambda.model.DeleteEventSourceMappingRequest;
+import com.amazonaws.services.lambda.model.DeleteFunctionRequest;
 import com.amazonaws.services.lambda.model.FunctionCode;
 import com.amazonaws.util.IOUtils;
 import com.amazonaws.waiters.Waiter;
@@ -56,8 +58,11 @@ public class LambdaInvokingRecordProcessorKinesisTest {
   private static final String FUNCTION_HANDLER = "com.digitalsanctum.lambda.functions.event.kinesis.BasicKinesis::handler";
   static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";
   static final String TEST_RUNTIME = "java8";
+  
+  private static String eventSourceMappingUuid;
 
   private static AWSLocal awsLocal;
+  private static AWSLambda awsLambda;
   private static AmazonKinesis amazonKinesis;
   private static KclWorker kclWorker;
 
@@ -76,7 +81,7 @@ public class LambdaInvokingRecordProcessorKinesisTest {
 
     AwsClientBuilder.EndpointConfiguration lambdaEndpointConfiguration
         = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, awsLocal.getSigningRegion());
-    AWSLambda awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(lambdaEndpointConfiguration).build();
+    awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(lambdaEndpointConfiguration).build();
 
     // Kinesalite does not support CBOR
     System.setProperty(SDKGlobalConfiguration.AWS_CBOR_DISABLE_SYSTEM_PROPERTY, "true");
@@ -131,6 +136,8 @@ public class LambdaInvokingRecordProcessorKinesisTest {
         = awsLambda.createEventSourceMapping(createEventSourceMappingRequest);
     log.info(createEventSourceMappingResult.toString());
 
+    eventSourceMappingUuid = createEventSourceMappingResult.getUUID();
+
     IRecordProcessorFactory recordProcessorFactory
         = new LambdaInvokingProcessorFactory(lambdaEndpointConfiguration, FUNCTION_NAME);
 
@@ -144,12 +151,16 @@ public class LambdaInvokingRecordProcessorKinesisTest {
     log.info("waiting 30s to allow worker to initialize");
     Thread.sleep(30_000);
 
-
     log.info("setup complete");
   }
 
   @AfterClass
   public static void tearDown() throws Exception {
+    
+    awsLambda.deleteEventSourceMapping(new DeleteEventSourceMappingRequest().withUUID(eventSourceMappingUuid));
+    
+    awsLambda.deleteFunction(new DeleteFunctionRequest().withFunctionName(FUNCTION_NAME));
+    
     awsLocal.stop();
   }
 

@@ -9,8 +9,9 @@ import com.amazonaws.services.lambda.model.ListEventSourceMappingsRequest;
 import com.amazonaws.services.lambda.model.ListEventSourceMappingsResult;
 import com.amazonaws.services.lambda.model.UpdateEventSourceMappingRequest;
 import com.amazonaws.services.lambda.model.UpdateEventSourceMappingResult;
-import com.digitalsanctum.lambda.service.EventSourceMappingService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
+import com.digitalsanctum.lambda.service.EventSourceMappingService;
+import com.digitalsanctum.lambda.service.LocalFileSystemService;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -23,6 +24,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.digitalsanctum.lambda.Configuration.MAPPING_SUFFIX;
+import static com.digitalsanctum.lambda.Configuration.ROOT_DIR;
 import static java.lang.Boolean.TRUE;
 import static java.nio.file.Files.delete;
 
@@ -32,8 +35,7 @@ import static java.nio.file.Files.delete;
  */
 public class LocalFileEventSourceMappingService implements EventSourceMappingService {
 
-  public static final Path ROOT_DIR = Paths.get(System.getProperty("user.home"), ".lambda");
-  public static final String MAPPING_SUFFIX = "-mappings.json";
+  
 
   private final LocalFileSystemService localFileSystemService;
 

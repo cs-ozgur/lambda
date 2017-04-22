@@ -13,8 +13,8 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
-import com.digitalsanctum.lambda.service.LambdaService;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
+import com.digitalsanctum.lambda.service.LambdaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +30,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.UUID;
 
 import static com.amazonaws.http.HttpResponseHandler.X_AMZN_REQUEST_ID_HEADER;
+import static java.util.UUID.randomUUID;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+import static javax.ws.rs.core.Response.Status.OK;
 
 /**
  * Endpoints for storing and invoking Lambda functions outside functionArn AWS.
@@ -44,11 +49,15 @@ import static com.amazonaws.http.HttpResponseHandler.X_AMZN_REQUEST_ID_HEADER;
 public class FunctionResource {
 
   private static final Logger log = LoggerFactory.getLogger(FunctionResource.class);
+  public static final String X_AMZN_REMAPPED_CONTENT_LENGTH = "x-amzn-Remapped-Content-Length";
 
   private final LambdaService lambdaService;
+  private final String bridgeServerEndpoint;
 
-  public FunctionResource(LambdaService lambdaService) {
+  public FunctionResource(final LambdaService lambdaService,
+                          final String bridgeServerEndpoint) {
     this.lambdaService = lambdaService;
+    this.bridgeServerEndpoint = bridgeServerEndpoint;
   }
 
   @DELETE
@@ -69,8 +78,8 @@ public class FunctionResource {
     lambdaService.deleteFunction(functionName);
 
     return Response
-        .status(Response.Status.NO_CONTENT)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
+        .status(NO_CONTENT)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .build();
   }
 
@@ -84,7 +93,7 @@ public class FunctionResource {
                                  @HeaderParam("amz-sdk-invocation-id") String awsSdkInvocationId) {
 
     log.info("creating function");
-    
+
     FunctionConfiguration fc = new FunctionConfiguration();
     fc.setFunctionName(request.getFunctionName());
     fc.setFunctionArn(ArnUtils.functionArn(request.getFunctionName()));
@@ -93,9 +102,9 @@ public class FunctionResource {
 
     // save lambda jar to tmp dir and persist the path
     if (request.getCode() != null) {
-      
+
       log.info("updating function code");
-      
+
       FunctionCode code = request.getCode();
       UpdateFunctionCodeRequest updateFunctionCodeRequest = new UpdateFunctionCodeRequest();
       updateFunctionCodeRequest.setFunctionName(fc.getFunctionName());
@@ -106,10 +115,10 @@ public class FunctionResource {
     CreateFunctionResult result = lambdaService.saveFunctionConfiguration(fc);
 
     log.info(result.toString());
-    
+
     return Response
-        .status(Response.Status.CREATED)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
+        .status(CREATED)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .entity(result)
         .build();
   }
@@ -125,12 +134,12 @@ public class FunctionResource {
     verifyFunctionExists(functionName, getFunctionResult);
 
     updateFunctionCodeRequest.setFunctionName(functionName);
-    
+
     UpdateFunctionCodeResult updateFunctionCodeResult = lambdaService.updateFunctionCode(updateFunctionCodeRequest);
 
     return Response
-        .status(Response.Status.OK)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
+        .status(OK)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .entity(updateFunctionCodeResult)
         .build();
   }
@@ -149,8 +158,8 @@ public class FunctionResource {
         = lambdaService.updateFunctionConfiguration(updateFunctionConfigurationRequest);
 
     return Response
-        .status(Response.Status.OK)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
+        .status(OK)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .entity(updateFunctionConfigurationResult)
         .build();
   }
@@ -161,15 +170,15 @@ public class FunctionResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getFunction(@PathParam("functionName") String functionName) {
-    
+
     log.info("getting function {}", functionName);
 
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
 
     return Response
-        .status(Response.Status.OK)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
+        .status(OK)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .entity(getFunctionResult)
         .build();
   }
@@ -184,8 +193,8 @@ public class FunctionResource {
     ListFunctionsResult listFunctionsResult = lambdaService.listFunctions();
 
     return Response
-        .status(Response.Status.OK)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
+        .status(OK)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .entity(listFunctionsResult)
         .build();
   }
@@ -201,9 +210,9 @@ public class FunctionResource {
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     if (getFunctionResult == null) {
       return Response
-          .status(Response.Status.NOT_FOUND)
-          .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
-          .header("x-amzn-Remapped-Content-Length", 0)
+          .status(NOT_FOUND)
+          .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
+          .header(X_AMZN_REMAPPED_CONTENT_LENGTH, 0)
           .build();
     }
 
@@ -215,11 +224,19 @@ public class FunctionResource {
     FunctionConfiguration functionConfiguration = getFunctionResult.getConfiguration();
     FunctionCodeLocation functionCodeLocation = getFunctionResult.getCode();
 
-    Object invokeResult = lambdaService.invokeFunction(invokeRequest, functionConfiguration, functionCodeLocation);
+
+    Object invokeResult = lambdaService.invokeFunction(invokeRequest, bridgeServerEndpoint, functionConfiguration, functionCodeLocation);
+    if (invokeResult == null) {
+      return Response
+          .status(INTERNAL_SERVER_ERROR)
+          .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
+          .header(X_AMZN_REMAPPED_CONTENT_LENGTH, 0)
+          .build();
+    }
     return Response
-        .status(Response.Status.OK)
-        .header(X_AMZN_REQUEST_ID_HEADER, UUID.randomUUID().toString())
-        .header("x-amzn-Remapped-Content-Length", 0)
+        .status(OK)
+        .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
+        .header(X_AMZN_REMAPPED_CONTENT_LENGTH, 0)
         .entity(invokeResult)
         .build();
   }
@@ -230,8 +247,8 @@ public class FunctionResource {
       ResourceNotFoundException e = new ResourceNotFoundException("Function not found: " + ArnUtils.functionArn(functionName));
       e.setErrorCode("ResourceNotFoundException");
       e.setServiceName("AWSLambda");
-      e.setStatusCode(Response.Status.NOT_FOUND.getStatusCode());
-      e.setRequestId(UUID.randomUUID().toString());
+      e.setStatusCode(NOT_FOUND.getStatusCode());
+      e.setRequestId(randomUUID().toString());
       e.setType("User");
       throw e;
     }

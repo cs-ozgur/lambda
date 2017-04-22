@@ -104,7 +104,7 @@ public abstract class AbstractDockerService implements DockerService {
         .addVolumes(volumes)
         .exposedPorts(ports);
     
-    final ContainerCreation creation = dockerClient.createContainer(containerConfig.build());
+    final ContainerCreation creation = dockerClient.createContainer(containerConfig.build(), name());
     final String id = creation.id();
 
     // Start container

@@ -21,6 +21,8 @@ import org.apache.http.util.EntityUtils;
 
 import java.nio.ByteBuffer;
 
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
+
 /**
  * @author Shane Witbeck
  * @since 7/17/16
@@ -39,23 +41,31 @@ public interface LambdaService {
 
   ListFunctionsResult listFunctions();
 
-  default Object invokeFunction(InvokeRequest invokeRequest, FunctionConfiguration functionConfiguration,
-                                FunctionCodeLocation functionCodeLocation) {
-    
-    CloseableHttpClient httpClient = HttpClients.createDefault();
+  default Object invokeFunction(final InvokeRequest invokeRequest,
+                                final String bridgeServerEndpoint,
+                                final FunctionConfiguration functionConfiguration,
+                                final FunctionCodeLocation functionCodeLocation) {
+
     String handler = functionConfiguration.getHandler();
     String location = functionCodeLocation.getLocation();
+    String name = invokeRequest.getFunctionName();
 
-    String functionEndpoint = new ContainerService().runContainer(httpClient, handler, location);
+    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
-    try {
+      String functionEndpoint = new ContainerService().runContainer(httpClient, bridgeServerEndpoint, handler, location, name);
+      
+      if (functionEndpoint == null) {
+        return null;
+      }
+      
       ByteBuffer payloadByteBuffer = invokeRequest.getPayload();
       String payload = new String(payloadByteBuffer.array());
 
-      HttpPost post = new HttpPost(functionEndpoint);
       StringEntity input = new StringEntity(payload);
+      input.setContentType(APPLICATION_JSON.toString());
+
+      HttpPost post = new HttpPost(functionEndpoint);
       post.setEntity(input);
-      input.setContentType("application/json");
 
       CloseableHttpResponse response = httpClient.execute(post);
 

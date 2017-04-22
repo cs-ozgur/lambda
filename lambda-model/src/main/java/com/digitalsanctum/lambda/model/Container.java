@@ -9,9 +9,11 @@ import java.util.StringJoiner;
  */
 public class Container {
   private String id;
+  private String name;
 
-  public Container(String id) {
+  public Container(String id, String name) {
     this.id = id;
+    this.name = name;
   }
 
   public Container() {
@@ -23,6 +25,14 @@ public class Container {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   @Override
@@ -44,6 +54,7 @@ public class Container {
   public String toString() {
     return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
         .add("id = " + id)
+        .add("name = " + name)
         .toString();
   }
 }

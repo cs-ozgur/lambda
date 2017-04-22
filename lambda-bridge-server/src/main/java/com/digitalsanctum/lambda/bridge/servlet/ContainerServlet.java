@@ -51,6 +51,8 @@ public class ContainerServlet extends HttpServlet {
 
   /**
    * Create and run a container
+   * 
+   * POST /containers
    *
    * @param req
    * @param resp

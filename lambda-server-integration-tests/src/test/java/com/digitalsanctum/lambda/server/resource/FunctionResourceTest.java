@@ -39,7 +39,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -68,22 +67,22 @@ public class FunctionResourceTest {
   @BeforeClass
   public static void before() throws Exception {
 
-    awsLocal = AWSLocal.builder(FILESYSTEM)
+    /*awsLocal = AWSLocal.builder(FILESYSTEM)
         .build()
-        .start();
+        .start();*/
 
     log.info("setup complete");
   }
 
   @AfterClass
   public static void after() throws Exception {
-    awsLocal.stop();
+//    awsLocal.stop();
   }
 
   @Before
   public void setup() throws Exception {
     AwsClientBuilder.EndpointConfiguration endpointConfiguration
-        = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, awsLocal.getSigningRegion());
+        = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, "local");
     awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
   }
 
@@ -214,7 +213,7 @@ public class FunctionResourceTest {
     FunctionCode code = new FunctionCode().withZipFile(byteBuffer);
     createFunctionRequest.setCode(code);
 
-    CreateFunctionResult result = awsLambda.createFunction(createFunctionRequest);
+    CreateFunctionResult result = awsLambda.createFunction(createFunctionRequest);    
     assertNotNull(result);
     assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());
     assertEquals(TEST_ARN, result.getFunctionArn());

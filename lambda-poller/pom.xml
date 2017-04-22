@@ -13,7 +13,7 @@
     
     <dependencies>
         <dependency>
-            <groupId>com.digitalsanctum.lambda</groupId>
+            <groupId>com.amazonaws</groupId>
             <artifactId>dynamodb-streams-kinesis-adapter</artifactId>
         </dependency>
         <dependency>

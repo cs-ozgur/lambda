@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.service.localfile;
+package com.digitalsanctum.lambda.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+
+import static java.nio.file.StandardOpenOption.CREATE;
 
 /**
  * @author Shane Witbeck
@@ -17,11 +18,11 @@ public class LocalFileSystemService {
   
   private static final Logger log = LoggerFactory.getLogger(LocalFileSystemService.class);
 
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   public void write(Path path, byte[] bytes) {
     try {
-      Files.write(path, bytes, StandardOpenOption.CREATE);
+      Files.write(path, bytes, CREATE);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -30,7 +31,7 @@ public class LocalFileSystemService {
   public void write(Path path, Object object) {
 
     try {
-      mapper.writeValue(path.toFile(), object);
+      MAPPER.writeValue(path.toFile(), object);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -39,7 +40,7 @@ public class LocalFileSystemService {
   public Object read(Path path, Class<?> clazz) {
 
     try {
-      return mapper.readValue(path.toFile(), clazz);
+      return MAPPER.readValue(path.toFile(), clazz);
     } catch (IOException e) {
       e.printStackTrace();
     }

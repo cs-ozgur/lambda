@@ -4,8 +4,9 @@ import com.digitalsanctum.lambda.bridge.service.ContainerService;
 import com.digitalsanctum.lambda.bridge.service.DockerContainerService;
 import com.digitalsanctum.lambda.bridge.service.DockerImageService;
 import com.digitalsanctum.lambda.bridge.service.ImageService;
-import com.digitalsanctum.lambda.bridge.servlet.ImageServlet;
 import com.digitalsanctum.lambda.bridge.servlet.ContainerServlet;
+import com.digitalsanctum.lambda.bridge.servlet.ImageServlet;
+import com.digitalsanctum.lambda.service.LocalFileSystemService;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
@@ -54,7 +55,8 @@ public class DockerBridgeServer {
     ServletHolder imageServletHolder = new ServletHolder(builderServlet);
     sch.addServlet(imageServletHolder, "/images/*");
 
-    ContainerService containerService = new DockerContainerService(dockerClient);
+    LocalFileSystemService localFileSystemService = new LocalFileSystemService();
+    ContainerService containerService = new DockerContainerService(dockerClient, localFileSystemService);
     ContainerServlet containerServlet = new ContainerServlet(containerService);
     ServletHolder containerServiceHolder = new ServletHolder(containerServlet);
     sch.addServlet(containerServiceHolder, "/containers/*");
@@ -89,7 +91,11 @@ public class DockerBridgeServer {
       log.error("Error stopping " + Bridge, e);
     }
   }
-  
+
+  public int getPort() {
+    return port;
+  }
+
   public boolean isRunning() {
     return running;
   }

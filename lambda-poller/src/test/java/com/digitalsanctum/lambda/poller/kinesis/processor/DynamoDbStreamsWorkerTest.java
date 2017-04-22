@@ -23,6 +23,7 @@ import com.amazonaws.services.dynamodbv2.streamsadapter.AmazonDynamoDBStreamsAda
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.v2.IRecordProcessorFactory;
 import com.digitalsanctum.lambda.lifecycle.AWSLocal;
 import com.digitalsanctum.lambda.poller.dynamodb.DynamoDbStreamsWorker;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -46,13 +47,14 @@ public class DynamoDbStreamsWorkerTest {
   private static final String TABLE_NAME = "foo";
   private static final long RCU = 1L, WCU = 1L;
 
+  private static AWSLocal awsLocal;
   private static AmazonDynamoDB amazonDynamoDB;
   private static DynamoDbStreamsWorker dynamoDbStreamsWorker;
 
   @BeforeClass
   public static void setupClazz() throws Exception {
     
-    AWSLocal awsLocal = AWSLocal.builder(FILESYSTEM)
+    awsLocal = AWSLocal.builder(FILESYSTEM)
         .enableDynamoDB()
         .build();
     awsLocal.start();
@@ -96,13 +98,19 @@ public class DynamoDbStreamsWorkerTest {
         
     dynamoDbStreamsWorker = new DynamoDbStreamsWorker(latestStreamArn, dynamoDbEndpoint, credentialsProvider,
         adapterClient, recordProcessorFactory);
+    dynamoDbStreamsWorker.start();
+    Thread.sleep(5_000);
+  }
+  
+  @AfterClass
+  public static void afterClazz() throws Exception {
+    Thread.sleep(10_000);
+    dynamoDbStreamsWorker.stop();
+    awsLocal.stop();
   }
 
   @Test
-  public void test() throws Exception {
-    dynamoDbStreamsWorker.start();
-
-    Thread.sleep(5_000);
+  public void testPutItem() throws Exception {
     
     // put a record to DynamoDB which should trigger an invocation of the lambda function
     String hashKeyValue = UUID.randomUUID().toString();
@@ -110,9 +118,5 @@ public class DynamoDbStreamsWorkerTest {
     PutItemRequest putItemRequest = new PutItemRequest(TABLE_NAME, of(HASH_KEY_ATTRIBUTE_NAME, new AttributeValue().withS(hashKeyValue)));
     PutItemResult putItemResult = amazonDynamoDB.putItem(putItemRequest);
     log.info("putItemResult: {}", putItemResult.toString());
-
-    Thread.sleep(10_000);
-
-    dynamoDbStreamsWorker.stop();
   }
 }

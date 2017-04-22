@@ -6,6 +6,7 @@ import com.digitalsanctum.lambda.model.DeleteContainerRequest;
 import com.digitalsanctum.lambda.model.DeleteContainerResponse;
 import com.digitalsanctum.lambda.model.RunContainerRequest;
 import com.digitalsanctum.lambda.model.RunContainerResponse;
+import com.digitalsanctum.lambda.service.LocalFileSystemService;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import org.apache.commons.compress.utils.IOUtils;
@@ -36,7 +37,8 @@ public class DockerContainerServiceTest {
   public void setup() throws Exception {
     final DockerClient dockerClient = DefaultDockerClient.fromEnv().build();
     DockerImageService dockerImageService = new DockerImageService(dockerClient);
-    containerService = new DockerContainerService(dockerClient);
+    LocalFileSystemService localFileSystemService = new LocalFileSystemService();
+    containerService = new DockerContainerService(dockerClient, localFileSystemService);
 
     CreateImageRequest request = new CreateImageRequest();
     request.setImageName("test");

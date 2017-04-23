@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 import static com.digitalsanctum.lambda.Configuration.CODE_LOC_SUFFIX;
 import static com.digitalsanctum.lambda.Configuration.CODE_SUFFIX;
 import static com.digitalsanctum.lambda.Configuration.CONFIG_SUFFIX;
-import static com.digitalsanctum.lambda.Configuration.CONTAINER_SUFFIX;
+import static com.digitalsanctum.lambda.Configuration.MAPPING_SUFFIX;
 import static com.digitalsanctum.lambda.Configuration.ROOT_DIR;
 import static java.nio.file.Files.delete;
 
@@ -189,7 +189,7 @@ public class LocalFileLambdaService implements LambdaService {
   public FunctionConfiguration deleteFunction(String functionName) {
 
     // get containerId from functionName
-    Path containerConfigPath = Paths.get(ROOT_DIR.toString(), functionName + CONTAINER_SUFFIX);
+    Path containerConfigPath = Paths.get(ROOT_DIR.toString(), functionName + MAPPING_SUFFIX);
     FunctionContainerConfiguration containerConfig = (FunctionContainerConfiguration) localFileSystemService
         .read(containerConfigPath, FunctionContainerConfiguration.class);
     if (containerConfig != null) {

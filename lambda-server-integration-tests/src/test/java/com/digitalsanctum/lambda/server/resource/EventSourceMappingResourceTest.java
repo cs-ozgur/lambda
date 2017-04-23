@@ -22,7 +22,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -249,7 +248,6 @@ public class EventSourceMappingResourceTest {
 
 
   @Test
-  @Ignore
   public void listEventSourceMappings() throws Exception {
     ListEventSourceMappingsResult result = awsLambda.listEventSourceMappings();
     assertThat(result.getEventSourceMappings().size(), is(0));

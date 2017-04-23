@@ -18,6 +18,5 @@ public class Configuration {
   public static final String CODE_SUFFIX = "-code.jar";
   public static final int CONTAINER_AVAILABILITY_SLEEP_PERIOD = 500;
   public static final int CONTAINER_AVAILABILITY_TIMEOUT = 10000;
-  public static final String CONTAINER_SUFFIX = "-container.json";
   public static final String MAPPING_SUFFIX = "-mappings.json";
 }

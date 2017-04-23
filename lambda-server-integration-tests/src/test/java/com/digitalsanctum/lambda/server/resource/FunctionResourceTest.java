@@ -26,6 +26,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,6 +40,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FILESYSTEM;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -67,16 +69,16 @@ public class FunctionResourceTest {
   @BeforeClass
   public static void before() throws Exception {
 
-    /*awsLocal = AWSLocal.builder(FILESYSTEM)
+    awsLocal = AWSLocal.builder(FILESYSTEM)
         .build()
-        .start();*/
+        .start();
 
     log.info("setup complete");
   }
 
   @AfterClass
   public static void after() throws Exception {
-//    awsLocal.stop();
+    awsLocal.stop();
   }
 
   @Before
@@ -84,6 +86,11 @@ public class FunctionResourceTest {
     AwsClientBuilder.EndpointConfiguration endpointConfiguration
         = new AwsClientBuilder.EndpointConfiguration(LAMBDA_SERVER_ENDPOINT, "local");
     awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
+  }
+  
+  @After
+  public void tearDown() throws Exception {
+    deleteTestFunction();
   }
 
   @Test
@@ -97,7 +104,7 @@ public class FunctionResourceTest {
   @Test
   public void testDeleteFunctionRequest() throws Exception {
 
-    createFunction();
+    createTestFunction();
 
     GetFunctionRequest getFunctionRequest = new GetFunctionRequest().withFunctionName(TEST_FUNCTION_NAME);
     GetFunctionResult getFunctionResult = awsLambda.getFunction(getFunctionRequest);
@@ -164,7 +171,7 @@ public class FunctionResourceTest {
 
   @Test
   public void testUpdateFunctionCodeRequest() throws Exception {
-    createFunction();
+    createTestFunction();
 
     String testRequestJson = getTestRequest();
 
@@ -187,6 +194,7 @@ public class FunctionResourceTest {
 
     UpdateFunctionCodeRequest updateFunctionCodeRequest = new UpdateFunctionCodeRequest();
     updateFunctionCodeRequest.setPublish(true);
+    
   }
 
   /**
@@ -194,11 +202,11 @@ public class FunctionResourceTest {
    */
   @Test
   public void testInvokeRequest_RequestResponse() throws Exception {
-    createFunction();
+    createTestFunction();
     invoke_RequestResponse();
   }
 
-  private void createFunction() throws Exception {
+  private void createTestFunction() throws Exception {
 
     CreateFunctionRequest createFunctionRequest = new CreateFunctionRequest()
         .withFunctionName(TEST_FUNCTION_NAME)
@@ -217,6 +225,16 @@ public class FunctionResourceTest {
     assertNotNull(result);
     assertEquals(TEST_FUNCTION_NAME, result.getFunctionName());
     assertEquals(TEST_ARN, result.getFunctionArn());
+  }
+  
+  private void deleteTestFunction() throws Exception {
+    DeleteFunctionRequest req = new DeleteFunctionRequest();
+    req.setFunctionName(TEST_FUNCTION_NAME);
+    try {
+      awsLambda.deleteFunction(req);
+    } catch (Exception e) {
+      // noop
+    }
   }
 
   private void invoke_RequestResponse() throws JsonProcessingException {

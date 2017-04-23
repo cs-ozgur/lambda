@@ -120,6 +120,7 @@ public abstract class AbstractDockerService implements DockerService {
       try {
         log.info("killing container {} with id {}...", name(), containerId);
         dockerClient.killContainer(containerId);
+        dockerClient.removeContainer(containerId);
         running = false;
         containerId = null;
       } catch (DockerException | InterruptedException e) {

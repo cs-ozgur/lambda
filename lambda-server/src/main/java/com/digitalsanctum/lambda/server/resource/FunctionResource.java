@@ -49,7 +49,8 @@ import static javax.ws.rs.core.Response.Status.OK;
 public class FunctionResource {
 
   private static final Logger log = LoggerFactory.getLogger(FunctionResource.class);
-  public static final String X_AMZN_REMAPPED_CONTENT_LENGTH = "x-amzn-Remapped-Content-Length";
+  
+  private static final String X_AMZN_REMAPPED_CONTENT_LENGTH = "x-amzn-Remapped-Content-Length";
 
   private final LambdaService lambdaService;
   private final String bridgeServerEndpoint;
@@ -71,9 +72,6 @@ public class FunctionResource {
 
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
-
-    FunctionCodeLocation functionCodeLocation = getFunctionResult.getCode();
-    System.out.println(functionCodeLocation);
 
     lambdaService.deleteFunction(functionName);
 

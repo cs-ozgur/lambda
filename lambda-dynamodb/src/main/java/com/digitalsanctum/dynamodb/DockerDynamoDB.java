@@ -10,7 +10,7 @@ public class DockerDynamoDB extends AbstractDockerService {
   
   @Override
   public String name() {
-    return "DynamoDB";
+    return "dynamodb";
   }
 
   @Override

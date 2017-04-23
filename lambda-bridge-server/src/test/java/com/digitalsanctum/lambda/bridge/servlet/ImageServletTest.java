@@ -54,7 +54,7 @@ public class ImageServletTest {
   
   @Before
   public void setup() throws Exception {
-    imageName = "test1";
+    imageName = "test1-" + System.currentTimeMillis();
     dockerBridgeServer = new DockerBridgeServer(TEST_PORT);
     dockerBridgeServer.start();
   }

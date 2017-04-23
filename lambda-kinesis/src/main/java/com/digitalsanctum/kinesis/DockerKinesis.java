@@ -20,6 +20,6 @@ public class DockerKinesis extends AbstractDockerService {
 
   @Override
   public String name() {
-    return "kinesis";
+    return "kinesis-streams";
   }
 }

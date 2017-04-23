@@ -13,8 +13,11 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import com.digitalsanctum.lambda.model.DeleteContainerResponse;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import com.digitalsanctum.lambda.service.LambdaService;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,6 +138,19 @@ public class FunctionResource {
 
     UpdateFunctionCodeResult updateFunctionCodeResult = lambdaService.updateFunctionCode(updateFunctionCodeRequest);
 
+    // get containerId of existing running container
+    String containerId = getFunctionResult.getCode().getLocation();
+    
+    // delete existing function so that on next execution a new container will be created with new code    
+    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+    
+      DeleteContainerResponse deleteContainerResponse = lambdaService.deleteContainer(httpClient, containerId);
+      log.info(deleteContainerResponse.toString());
+      
+    } catch (Exception e) {
+      log.warn("Error deleting container: " + containerId, e);
+    }
+
     return Response
         .status(OK)
         .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
@@ -151,7 +167,7 @@ public class FunctionResource {
 
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
-
+    
     UpdateFunctionConfigurationResult updateFunctionConfigurationResult
         = lambdaService.updateFunctionConfiguration(updateFunctionConfigurationRequest);
 

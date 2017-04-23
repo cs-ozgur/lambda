@@ -10,7 +10,7 @@ public class DockerSQS extends AbstractDockerService {
 
   @Override
   public String name() {
-    return "SQS";
+    return "sqs";
   }
 
   @Override

@@ -12,7 +12,7 @@ public class DockerElasticacheRedis extends AbstractDockerService {
 
   @Override
   public String name() {
-    return "Elasticache-Redis";
+    return "elasticache-redis";
   }
 
   @Override

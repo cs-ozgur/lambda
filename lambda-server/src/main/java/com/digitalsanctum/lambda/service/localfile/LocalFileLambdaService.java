@@ -59,8 +59,6 @@ public class LocalFileLambdaService implements LambdaService {
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  
-
   private final LocalFileSystemService localFileSystemService;
 
   public LocalFileLambdaService(LocalFileSystemService localFileSystemService) {
@@ -218,7 +216,8 @@ public class LocalFileLambdaService implements LambdaService {
     return configuration;
   }
 
-  private DeleteContainerResponse deleteContainer(CloseableHttpClient client, String containerId) throws IOException {
+  @Override
+  public DeleteContainerResponse deleteContainer(CloseableHttpClient client, String containerId) throws IOException {
     log.info("Deleting {} container", containerId);
     HttpDelete delete = new HttpDelete("http://localhost:8082/containers/" + containerId);
     CloseableHttpResponse response = client.execute(delete);

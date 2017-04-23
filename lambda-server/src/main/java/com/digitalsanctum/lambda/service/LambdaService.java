@@ -10,6 +10,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import com.digitalsanctum.lambda.model.DeleteContainerResponse;
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -19,6 +20,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
@@ -38,6 +40,8 @@ public interface LambdaService {
   UpdateFunctionCodeResult updateFunctionCode(UpdateFunctionCodeRequest updateFunctionCodeRequest);
 
   FunctionConfiguration deleteFunction(String arn);
+
+  DeleteContainerResponse deleteContainer(CloseableHttpClient client, String containerId) throws IOException;
 
   ListFunctionsResult listFunctions();
 

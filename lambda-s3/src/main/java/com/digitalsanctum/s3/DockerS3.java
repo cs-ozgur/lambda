@@ -10,7 +10,7 @@ public class DockerS3 extends AbstractDockerService {
 
   @Override
   public String name() {
-    return "S3";
+    return "s3";
   }
 
   @Override

@@ -2,6 +2,7 @@ package com.digitalsanctum.lambda.lifecycle;
 
 import com.amazonaws.SDKGlobalConfiguration;
 import com.digitalsanctum.dynamodb.DockerDynamoDB;
+import com.digitalsanctum.elasticsearch.DockerElasticsearch;
 import com.digitalsanctum.kinesis.DockerKinesis;
 import com.digitalsanctum.lambda.bridge.server.DockerBridgeServer;
 import com.digitalsanctum.lambda.model.Component;
@@ -24,6 +25,7 @@ import static com.digitalsanctum.lambda.lifecycle.AWSLocal.LambdaServiceType.FIL
 import static com.digitalsanctum.lambda.model.Component.Bridge;
 import static com.digitalsanctum.lambda.model.Component.DynamoDB;
 import static com.digitalsanctum.lambda.model.Component.ElasticacheRedis;
+import static com.digitalsanctum.lambda.model.Component.Elasticsearch;
 import static com.digitalsanctum.lambda.model.Component.KinesisStreams;
 import static com.digitalsanctum.lambda.model.Component.Lambda;
 import static com.digitalsanctum.lambda.model.Component.S3;
@@ -49,18 +51,10 @@ public class AWSLocal implements Closeable {
   private boolean dynamoDbEnabled;
   private int dynamoDbPort;
   private String dynamoDbEndpoint;
-
   private boolean s3Enabled;
-  private int s3Port;
-  private String s3Endpoint;
-
   private boolean sqsEnabled;
-  private int sqsPort;
-  private String sqsEndpoint;
-
   private boolean elasticacheRedisEnabled;
-  private int elasticacheRedisPort;
-  private String elasticacheRedisEndpoint;
+  private boolean elasticsearchEnabled;
 
   private LambdaServiceType lambdaServiceType;
 
@@ -71,6 +65,7 @@ public class AWSLocal implements Closeable {
   private static DockerS3 dockerS3;
   private static DockerSQS dockerSQS;
   private static DockerElasticacheRedis dockerElasticacheRedis;
+  private static DockerElasticsearch dockerElasticsearch;
 
   private static Map<Component, String> endpoints = new TreeMap<>();
 
@@ -81,12 +76,14 @@ public class AWSLocal implements Closeable {
     this.s3Enabled = builder.enableS3;
     this.sqsEnabled = builder.enableSQS;
     this.elasticacheRedisEnabled = builder.enableElasticacheRedis;
+    this.elasticsearchEnabled = builder.enableElasticsearch;
   }
 
   public static void main(String[] args) {
     AWSLocal.builder(LambdaServiceType.FILESYSTEM)
         .enableDynamoDB()
         .enableElasticacheRedis()
+        .enableElasticsearch()
         .enableKinesisStreams()
         .enableS3()
         .enableSQS()
@@ -108,9 +105,16 @@ public class AWSLocal implements Closeable {
 
     if (isElasticacheRedisEnabled()) {
       dockerElasticacheRedis = new DockerElasticacheRedis();
-      this.elasticacheRedisPort = dockerElasticacheRedis.start();
-      this.elasticacheRedisEndpoint = localEndpoint(this.elasticacheRedisPort);
-      endpoints.put(ElasticacheRedis, this.elasticacheRedisEndpoint);
+      int elasticacheRedisPort = dockerElasticacheRedis.start();
+      String elasticacheRedisEndpoint = localEndpoint(elasticacheRedisPort);
+      endpoints.put(ElasticacheRedis, elasticacheRedisEndpoint);
+    }
+
+    if (isElasticsearchEnabled()) {
+      dockerElasticsearch = new DockerElasticsearch();
+      int elasticsearchPort = dockerElasticsearch.start();
+      String elasticsearchEndpoint = localEndpoint(elasticsearchPort);
+      endpoints.put(Elasticsearch, elasticsearchEndpoint);
     }
 
     if (isKinesisStreamsEnabled()) {
@@ -122,16 +126,16 @@ public class AWSLocal implements Closeable {
 
     if (isS3Enabled()) {
       dockerS3 = new DockerS3();
-      this.s3Port = dockerS3.start();
-      this.s3Endpoint = localEndpoint(s3Port);
-      endpoints.put(S3, this.s3Endpoint);
+      int s3Port = dockerS3.start();
+      String s3Endpoint = localEndpoint(s3Port);
+      endpoints.put(S3, s3Endpoint);
     }
 
     if (isSqsEnabled()) {
       dockerSQS = new DockerSQS();
-      this.sqsPort = dockerSQS.start();
-      this.sqsEndpoint = localEndpoint(sqsPort);
-      endpoints.put(SQS, this.sqsEndpoint);
+      int sqsPort = dockerSQS.start();
+      String sqsEndpoint = localEndpoint(sqsPort);
+      endpoints.put(SQS, sqsEndpoint);
     }
 
     // make sure to kill containers
@@ -151,6 +155,9 @@ public class AWSLocal implements Closeable {
       }
       if (isElasticacheRedisEnabled()) {
         dockerElasticacheRedis.stop();
+      }
+      if (isElasticsearchEnabled()) {
+        dockerElasticsearch.stop();
       }
       dockerBridgeServer.stop();
       lambdaServer.stop();
@@ -210,6 +217,10 @@ public class AWSLocal implements Closeable {
 
   public boolean isElasticacheRedisEnabled() {
     return elasticacheRedisEnabled;
+  }
+
+  public boolean isElasticsearchEnabled() {
+    return elasticsearchEnabled;
   }
 
   public boolean isLambdaEnabled() {
@@ -287,6 +298,11 @@ public class AWSLocal implements Closeable {
       log.info("stopping Elasticache (Redis) container");
       dockerElasticacheRedis.stop();
     }
+
+    if (isElasticacheRedisEnabled() && dockerElasticsearch != null) {
+      log.info("stopping Elasticsearch container");
+      dockerElasticsearch.stop();
+    }
   }
 
   @Override
@@ -304,6 +320,7 @@ public class AWSLocal implements Closeable {
     private boolean enableS3 = false;
     private boolean enableSQS = false;
     private boolean enableElasticacheRedis = false;
+    private boolean enableElasticsearch = false;
     private LambdaServiceType lambdaServiceType;
 
     public Builder(LambdaServiceType lambdaServiceType) {
@@ -332,6 +349,11 @@ public class AWSLocal implements Closeable {
 
     public Builder enableElasticacheRedis() {
       this.enableElasticacheRedis = true;
+      return this;
+    }
+
+    public Builder enableElasticsearch() {
+      this.enableElasticsearch = true;
       return this;
     }
 

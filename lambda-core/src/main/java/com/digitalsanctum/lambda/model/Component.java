@@ -7,6 +7,7 @@ package com.digitalsanctum.lambda.model;
 public enum Component {
   Bridge,
   ElasticacheRedis,
+  Elasticsearch,
   Lambda,
   DynamoDB,
   KinesisStreams,

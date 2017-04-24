@@ -10,11 +10,12 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <!--<module>dynamodb-streams-kinesis-adapter</module>-->
         <module>lambda-bridge-server</module>
         <module>lambda-core</module>
         <module>lambda-docker</module>
         <module>lambda-dynamodb</module>
+        <module>lambda-elasticache-redis</module>
+        <module>lambda-elasticsearch</module>
         <module>lambda-functions</module>
         <module>lambda-kinesis</module>
         <module>lambda-lifecycle</module>
@@ -24,8 +25,7 @@
         <module>lambda-s3</module>
         <module>lambda-server</module>
         <module>lambda-server-integration-tests</module>
-        <module>lambda-sqs</module>
-        <module>lambda-elasticache-redis</module>
+        <module>lambda-sqs</module>        
     </modules>
 
     <properties>
@@ -37,7 +37,7 @@
 
         <aws.dynamodblocal.version>[1.11,2.0)</aws.dynamodblocal.version>
         <aws.dynamodb-streams-kinesis-adapter.version>1.2.0</aws.dynamodb-streams-kinesis-adapter.version>
-        <aws-java-sdk.version>1.11.119</aws-java-sdk.version>
+        <aws-java-sdk.version>1.11.123</aws-java-sdk.version>
         <aws-kinesis-client.version>1.7.5</aws-kinesis-client.version>
         <aws-lambda-java-core.version>1.1.0</aws-lambda-java-core.version>
         <aws-lambda-java-events.version>1.3.0</aws-lambda-java-events.version>
@@ -116,6 +116,11 @@
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-elasticsearch</artifactId>
+                <version>${aws-java-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-s3</artifactId>
                 <version>${aws-java-sdk.version}</version>
             </dependency>
@@ -142,6 +147,11 @@
             <dependency>
                 <groupId>com.digitalsanctum.lambda</groupId>
                 <artifactId>lambda-elasticache-redis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.digitalsanctum.lambda</groupId>
+                <artifactId>lambda-elasticsearch</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

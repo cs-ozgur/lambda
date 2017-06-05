@@ -23,10 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.digitalsanctum.lambda.Configuration.MAPPING_SUFFIX;
@@ -78,13 +75,15 @@ public class DockerContainerService implements ContainerService {
 
       final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
 
+      List<String> keyValuePairs = createEnvironmentVariableList(runContainerRequest);
+
       // Create container with exposed ports
       final ContainerConfig containerConfig = ContainerConfig.builder()
-          .hostConfig(hostConfig)
-          .image(runContainerRequest.getImageId())
-          .env("LAMBDA_HANDLER=" + runContainerRequest.getHandler())
-          .exposedPorts(ports)
-          .build();
+              .hostConfig(hostConfig)
+              .image(runContainerRequest.getImageId())
+              .env(keyValuePairs.toArray(new String[keyValuePairs.size()]))
+              .exposedPorts(ports)
+              .build();
 
       final String functionName = runContainerRequest.getName();
       final ContainerCreation creation = dockerClient.createContainer(containerConfig, functionName);
@@ -110,12 +109,26 @@ public class DockerContainerService implements ContainerService {
 
     } catch (ContainerNotFoundException cnfe) {
       return new RunContainerResponse(SC_NOT_FOUND, cnfe.getMessage());
-    } catch (DockerException | InterruptedException de) {      
+    } catch (DockerException | InterruptedException de) {
       if (de instanceof DockerRequestException) {
         return new RunContainerResponse(((DockerRequestException) de).status(), de.getMessage());
-      }      
+      }
       return new RunContainerResponse(SC_INTERNAL_SERVER_ERROR, de.getMessage());
     }
+  }
+
+  private List<String> createEnvironmentVariableList(RunContainerRequest runContainerRequest) {
+    /**
+     * Create list initially with request parameter.
+     */
+    List<String> keyValuePairs = runContainerRequest.getEnvironmentVariables().entrySet()
+            .stream()
+            .map(entry -> entry.getKey() + "=" + entry.getValue())
+            .collect(Collectors.toList());
+
+    keyValuePairs.add("LAMBDA_HANDLER=" + runContainerRequest.getHandler());
+
+    return keyValuePairs;
   }
 
   @Override
@@ -146,7 +159,7 @@ public class DockerContainerService implements ContainerService {
     }
 
     return new ListContainersResponse(SC_OK, containers.stream()
-        .map(container -> new com.digitalsanctum.lambda.model.Container(container.id(), container.names().get(0)))
-        .collect(Collectors.toList()));
+            .map(container -> new com.digitalsanctum.lambda.model.Container(container.id(), container.names().get(0)))
+            .collect(Collectors.toList()));
   }
 }

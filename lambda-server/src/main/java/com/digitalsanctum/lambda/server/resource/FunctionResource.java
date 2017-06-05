@@ -1,18 +1,6 @@
 package com.digitalsanctum.lambda.server.resource;
 
-import com.amazonaws.services.lambda.model.CreateFunctionRequest;
-import com.amazonaws.services.lambda.model.CreateFunctionResult;
-import com.amazonaws.services.lambda.model.FunctionCode;
-import com.amazonaws.services.lambda.model.FunctionCodeLocation;
-import com.amazonaws.services.lambda.model.FunctionConfiguration;
-import com.amazonaws.services.lambda.model.GetFunctionResult;
-import com.amazonaws.services.lambda.model.InvokeRequest;
-import com.amazonaws.services.lambda.model.ListFunctionsResult;
-import com.amazonaws.services.lambda.model.ResourceNotFoundException;
-import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
-import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
-import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
-import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import com.amazonaws.services.lambda.model.*;
 import com.digitalsanctum.lambda.model.DeleteContainerResponse;
 import com.digitalsanctum.lambda.server.util.ArnUtils;
 import com.digitalsanctum.lambda.service.LambdaService;
@@ -33,6 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.HashMap;
 
 import static com.amazonaws.http.HttpResponseHandler.X_AMZN_REQUEST_ID_HEADER;
 import static java.util.UUID.randomUUID;
@@ -52,7 +41,7 @@ import static javax.ws.rs.core.Response.Status.OK;
 public class FunctionResource {
 
   private static final Logger log = LoggerFactory.getLogger(FunctionResource.class);
-  
+
   private static final String X_AMZN_REMAPPED_CONTENT_LENGTH = "x-amzn-Remapped-Content-Length";
 
   private final LambdaService lambdaService;
@@ -101,6 +90,11 @@ public class FunctionResource {
     fc.setRuntime(request.getRuntime());
     fc.setHandler(request.getHandler());
 
+    /**
+     * Add environment variables.
+     */
+    fc.setEnvironment(new EnvironmentResponse().withVariables(request.getEnvironment().getVariables()));
+
     // save lambda jar to tmp dir and persist the path
     if (request.getCode() != null) {
 
@@ -140,13 +134,13 @@ public class FunctionResource {
 
     // get containerId of existing running container
     String containerId = getFunctionResult.getCode().getLocation();
-    
-    // delete existing function so that on next execution a new container will be created with new code    
+
+    // delete existing function so that on next execution a new container will be created with new code
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-    
+
       DeleteContainerResponse deleteContainerResponse = lambdaService.deleteContainer(httpClient, containerId);
       log.info(deleteContainerResponse.toString());
-      
+
     } catch (Exception e) {
       log.warn("Error deleting container: " + containerId, e);
     }
@@ -167,7 +161,7 @@ public class FunctionResource {
 
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
-    
+
     UpdateFunctionConfigurationResult updateFunctionConfigurationResult
         = lambdaService.updateFunctionConfiguration(updateFunctionConfigurationRequest);
 

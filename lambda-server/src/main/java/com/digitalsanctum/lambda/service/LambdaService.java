@@ -56,12 +56,13 @@ public interface LambdaService {
 
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
-      String functionEndpoint = new ContainerService().runContainer(httpClient, bridgeServerEndpoint, handler, location, name);
-      
+      String functionEndpoint = new ContainerService().runContainer(httpClient, bridgeServerEndpoint,
+              handler, location, name, functionConfiguration.getEnvironment().getVariables());
+
       if (functionEndpoint == null) {
         return null;
       }
-      
+
       ByteBuffer payloadByteBuffer = invokeRequest.getPayload();
       String payload = new String(payloadByteBuffer.array());
 

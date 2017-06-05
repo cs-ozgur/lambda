@@ -40,7 +40,8 @@ public class ContainerService {
                              final String bridgeServerEndpoint,
                              final String handler,
                              final String location,
-                             final String functionName) {
+                             final String functionName,
+                             final Map<String, String> environmentVariables) {
 
     String key = handler + location + functionName;
     if (FUNCTION_ENDPOINT_CACHE.containsKey(key)) {
@@ -56,7 +57,7 @@ public class ContainerService {
     // not found in cache or not available, create and run container
     Optional<RunContainerResponse> runContainerResponse;
     try {
-      RunContainerRequest runContainerRequest = new RunContainerRequest(location, handler, functionName);
+      RunContainerRequest runContainerRequest = new RunContainerRequest(location, handler, functionName, environmentVariables);
       String runContainerRequestJson = mapper.writeValueAsString(runContainerRequest);
       StringEntity runContainerRequestEntity = new StringEntity(runContainerRequestJson);
       runContainerRequestEntity.setContentType(APPLICATION_JSON.toString());
@@ -73,7 +74,7 @@ public class ContainerService {
       // cache the endpoint
       String functionEndpoint = null;
       if (runContainerResponse.isPresent()) {
-        
+
         if (runContainerResponse.get().getErrorMessage() != null) {
           if (runContainerResponse.get().getStatusCode() == 409) {
             HttpGet listContainersGet = new HttpGet(bridgeServerEndpoint + "/containers");
@@ -83,13 +84,13 @@ public class ContainerService {
             ListContainersResponse listContainersResponse = mapper.readValue(listResponseJson.getBytes(), ListContainersResponse.class);
             System.out.println(listContainersResponse);
           }
-          throw new RuntimeException(runContainerResponse.get().getErrorMessage());          
+          throw new RuntimeException(runContainerResponse.get().getErrorMessage());
         }
-        
-        functionEndpoint = runContainerResponse.get().getEndpoint();       
-        blockUntilContainerAvailable(httpClient, functionEndpoint);       
+
+        functionEndpoint = runContainerResponse.get().getEndpoint();
+        blockUntilContainerAvailable(httpClient, functionEndpoint);
         FUNCTION_ENDPOINT_CACHE.put(key, functionEndpoint);
-      }      
+      }
 
       return functionEndpoint;
 

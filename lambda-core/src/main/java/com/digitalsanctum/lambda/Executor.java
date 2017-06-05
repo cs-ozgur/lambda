@@ -3,6 +3,7 @@ package com.digitalsanctum.lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.KinesisEvent;
 import com.amazonaws.transform.JsonUnmarshallerContext;
@@ -13,10 +14,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -60,7 +63,7 @@ public class Executor implements ResultProvider {
       }
       if (selectedMethod == null) {
         throw new RuntimeException(String.format("Handler method '%s' not found in class '%s'",
-            this.definition.getHandlerMethod(), this.definition.getHandlerClass()));
+                this.definition.getHandlerMethod(), this.definition.getHandlerClass()));
       }
 
       final Object obj = cls.newInstance();
@@ -73,13 +76,13 @@ public class Executor implements ResultProvider {
       if (paramClassSet.contains(KinesisEvent.class)) {
 
         JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextFactory()
-            .getJsonUnmarshallerContext(inputJson);
+                .getJsonUnmarshallerContext(inputJson);
         inputObj = KinesisEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
       } else if (paramClassSet.contains(DynamodbEvent.class)) {
 
         JsonUnmarshallerContext jsonUnmarshallerContext = new JsonUnmarshallerContextFactory()
-            .getJsonUnmarshallerContext(inputJson);
+                .getJsonUnmarshallerContext(inputJson);
         inputObj = DynamodbEventUnmarshaller.getInstance().unmarshall(jsonUnmarshallerContext);
 
       } else {
@@ -92,20 +95,120 @@ public class Executor implements ResultProvider {
       Class cls = Class.forName(this.definition.getHandler());
       final Object obj = cls.newInstance();
 
-      Map<String, Class> handlerTypes = getRequestHandlerTypes(this.definition.getHandler());
+      if (obj instanceof RequestHandler) {
+        Map<String, Class> handlerTypes = getRequestHandlerTypes(this.definition.getHandler());
 
-      Class requestClass = handlerTypes.get("request");
+        Class requestClass = handlerTypes.get("request");
 
-      Object inputObj = mapper.readValue(inputJson, requestClass);
+        Object inputObj = mapper.readValue(inputJson, requestClass);
 
-      invoke(inputObj, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
+        invoke(inputObj, obj, getHandleRequest(cls, requestClass, Context.class));
+      } else if (obj instanceof RequestStreamHandler) {
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(inputJson.getBytes(StandardCharsets.UTF_8));
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        invoke(inputStream, outputStream, obj, getHandleRequest(cls, InputStream.class, OutputStream.class, Context.class));
+      }
     }
 
     return this;
   }
 
+  private Method getHandleRequest(Class cls, Class... classes) {
+    Method handleRequest = null;
+
+    while (null == handleRequest && null != cls) {
+      try {
+        handleRequest = cls.getDeclaredMethod("handleRequest", classes);
+      } catch (NoSuchMethodException e) {
+        cls = cls.getSuperclass();
+      }
+    }
+
+    return handleRequest;
+  }
+
+  private void invoke(final InputStream inputStream, final ByteArrayOutputStream outputStream, final Object functionInstance, final Method functionMethod) {
+    final Context context = this.definition.getContext();
+    final LambdaLogger logger = context.getLogger();
+    final ExecutorService executor = Executors.newSingleThreadExecutor();
+    final FunctionStreamRunnable functionRunnable = new FunctionStreamRunnable(context, inputStream, outputStream, functionInstance, functionMethod, this);
+    Future future = executor.submit(functionRunnable);
+
+    int timeout = this.definition.getTimeout();
+
+    // start mimic of Amazon Lambda invocation behavior
+    logger.log("START request: " + context.getAwsRequestId());
+    try {
+      future.get(timeout, SECONDS);
+    } catch (TimeoutException e) {
+      future.cancel(true);
+      logger.log("<< TIMED OUT >>");
+      e.printStackTrace();
+    } catch (Exception e) {
+      future.cancel(true);
+      logger.log("<< EXCEPTION >>");
+      e.printStackTrace();
+    } finally {
+      executor.shutdownNow();
+    }
+    logger.log("END request: " + context.getAwsRequestId());
+  }
+
+  private static class FunctionStreamRunnable implements Runnable {
+    private final LambdaLogger logger;
+    private final Context context;
+    private final Object input;
+    private final ByteArrayOutputStream output;
+    private final Object functionInstance;
+    private final Method functionMethod;
+    private final ResultProvider resultProvider;
+
+    FunctionStreamRunnable(Context context, Object input, ByteArrayOutputStream output, Object functionInstance, Method functionMethod, ResultProvider resultProvider) {
+      this.context = context;
+      this.logger = context.getLogger();
+      this.input = input;
+      this.output = output;
+      this.functionInstance = functionInstance;
+      this.functionMethod = functionMethod;
+      this.resultProvider = resultProvider;
+    }
+
+    @Override
+    public void run() {
+      logger.log(toString());
+      try {
+        Object result;
+//        if (functionMethod.getParameterCount() == 2) {
+        functionMethod.invoke(functionInstance, input, output, context);
+//        } else {
+//          result = functionMethod.invoke(functionInstance, input);
+//        }
+
+        resultProvider.setResult(new DirectResponse(new String(output.toByteArray())));
+      } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        logger.log("Error invoking function");
+        e.printStackTrace();
+      }
+    }
+
+    @Override
+    public String toString() {
+      return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
+              .add("context = " + context)
+              .add("functionInstance = " + functionInstance)
+              .add("functionMethod = " + functionMethod)
+              .add("input = " + input)
+              .add("output = " + output)
+              .add("logger = " + logger)
+              .add("resultProvider = " + resultProvider)
+              .toString();
+    }
+  }
+
   private static Map<String, Class> getRequestHandlerTypes(String handler)
-      throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+          throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
     Map<String, Class> types = new HashMap<>();
     Class cls = Class.forName(handler);
@@ -143,10 +246,10 @@ public class Executor implements ResultProvider {
   @Override
   public String toString() {
     return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
-        .add("definition = " + definition)
-        .add("mapper = " + mapper)
-        .add("result = " + result)
-        .toString();
+            .add("definition = " + definition)
+            .add("mapper = " + mapper)
+            .add("result = " + result)
+            .toString();
   }
 
   private static class FunctionRunnable implements Runnable {
@@ -188,13 +291,13 @@ public class Executor implements ResultProvider {
     @Override
     public String toString() {
       return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
-          .add("context = " + context)
-          .add("functionInstance = " + functionInstance)
-          .add("functionMethod = " + functionMethod)
-          .add("input = " + input)
-          .add("logger = " + logger)
-          .add("resultProvider = " + resultProvider)
-          .toString();
+              .add("context = " + context)
+              .add("functionInstance = " + functionInstance)
+              .add("functionMethod = " + functionMethod)
+              .add("input = " + input)
+              .add("logger = " + logger)
+              .add("resultProvider = " + resultProvider)
+              .toString();
     }
   }
 

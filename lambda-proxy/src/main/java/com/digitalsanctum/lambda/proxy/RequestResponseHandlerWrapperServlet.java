@@ -1,5 +1,6 @@
 package com.digitalsanctum.lambda.proxy;
 
+import com.digitalsanctum.lambda.DirectResponse;
 import com.digitalsanctum.lambda.Executor;
 import com.digitalsanctum.lambda.ResultProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,9 +46,13 @@ public class RequestResponseHandlerWrapperServlet extends HttpServlet {
     }
 
     try {
-      ResultProvider resultProvider = executor.execute(jb.toString());
-      Object resultObj = resultProvider.getResult();
-      new ObjectMapper().writeValue(resp.getWriter(), resultObj);
+      Object result = executor.execute(jb.toString()).getResult();
+
+      if (result instanceof DirectResponse) {
+        resp.getWriter().write(((DirectResponse) result).getResponse());
+      } else {
+        new ObjectMapper().writeValue(resp.getWriter(), result);
+      }
     } catch (Exception e) {
       e.printStackTrace();
     }

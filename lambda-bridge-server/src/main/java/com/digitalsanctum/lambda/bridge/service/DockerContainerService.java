@@ -127,6 +127,7 @@ public class DockerContainerService implements ContainerService {
             .collect(Collectors.toList());
 
     keyValuePairs.add("LAMBDA_HANDLER=" + runContainerRequest.getHandler());
+    keyValuePairs.add("LAMBDA_TIMEOUT=" + runContainerRequest.getTimeout());
 
     return keyValuePairs;
   }

@@ -41,7 +41,8 @@ public class ContainerService {
                              final String handler,
                              final String location,
                              final String functionName,
-                             final Map<String, String> environmentVariables) {
+                             final Map<String, String> environmentVariables,
+                             final Integer timeout) {
 
     String key = handler + location + functionName;
     if (FUNCTION_ENDPOINT_CACHE.containsKey(key)) {
@@ -57,7 +58,7 @@ public class ContainerService {
     // not found in cache or not available, create and run container
     Optional<RunContainerResponse> runContainerResponse;
     try {
-      RunContainerRequest runContainerRequest = new RunContainerRequest(location, handler, functionName, environmentVariables);
+      RunContainerRequest runContainerRequest = new RunContainerRequest(location, handler, functionName, environmentVariables, timeout);
       String runContainerRequestJson = mapper.writeValueAsString(runContainerRequest);
       StringEntity runContainerRequestEntity = new StringEntity(runContainerRequestJson);
       runContainerRequestEntity.setContentType(APPLICATION_JSON.toString());

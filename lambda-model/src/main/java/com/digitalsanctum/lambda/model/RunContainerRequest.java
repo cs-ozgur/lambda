@@ -13,15 +13,17 @@ public class RunContainerRequest {
   private String handler;
   private String name;
   private Map<String, String> environmentVariables;
+  private Integer timeout;
 
   public RunContainerRequest() {
   }
 
-  public RunContainerRequest(String imageId, String handler, String name, Map<String, String> environmentVariables) {
+  public RunContainerRequest(String imageId, String handler, String name, Map<String, String> environmentVariables, Integer timeout) {
     this.imageId = imageId;
     this.handler = handler;
     this.name = name;
     this.environmentVariables = environmentVariables;
+    this.timeout = timeout;
   }
 
   public String getImageId() {
@@ -56,6 +58,14 @@ public class RunContainerRequest {
     this.environmentVariables = environmentVariables;
   }
 
+  public Integer getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(Integer timeout) {
+    this.timeout = timeout;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -66,12 +76,13 @@ public class RunContainerRequest {
     return Objects.equals(this.handler, that.handler) &&
             Objects.equals(this.imageId, that.imageId) &&
             Objects.equals(this.name, that.name) &&
-            Objects.equals(this.environmentVariables, that.environmentVariables);
+            Objects.equals(this.environmentVariables, that.environmentVariables) &&
+            Objects.equals(this.timeout, that.timeout);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(handler, imageId, name, environmentVariables);
+    return Objects.hash(handler, imageId, name, environmentVariables, timeout);
   }
 
   @Override
@@ -81,6 +92,7 @@ public class RunContainerRequest {
             .add("imageId = " + imageId)
             .add("name = " + name)
             .add("environmentVariables = " + environmentVariables)
+            .add("timeout = " + timeout)
             .toString();
   }
 }

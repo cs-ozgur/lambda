@@ -21,11 +21,11 @@ public class SimpleContext implements Context {
     }
 
     public String getLogGroupName() {
-        return null;
+        return "local-" + getFunctionName();
     }
 
     public String getLogStreamName() {
-        return null;
+        return getLogGroupName() + getAwsRequestId();
     }
 
     public String getFunctionName() {
@@ -34,28 +34,28 @@ public class SimpleContext implements Context {
 
     @Override
     public String getFunctionVersion() {
-        return null;
+        return "local";
     }
 
     @Override
     public String getInvokedFunctionArn() {
-        return null;
+        return getFunctionVersion() + ":" + getFunctionName();
     }
 
     public CognitoIdentity getIdentity() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public ClientContext getClientContext() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public int getRemainingTimeInMillis() {
-        return 0;
+        return Integer.MAX_VALUE;
     }
 
     public int getMemoryLimitInMB() {
-        return 0;
+        return Integer.MAX_VALUE;
     }
 
     public LambdaLogger getLogger() {

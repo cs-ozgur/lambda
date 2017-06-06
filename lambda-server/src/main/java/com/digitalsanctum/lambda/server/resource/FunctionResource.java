@@ -95,6 +95,8 @@ public class FunctionResource {
      */
     fc.setEnvironment(new EnvironmentResponse().withVariables(request.getEnvironment().getVariables()));
 
+    fc.setTimeout(request.getTimeout());
+
     // save lambda jar to tmp dir and persist the path
     if (request.getCode() != null) {
 

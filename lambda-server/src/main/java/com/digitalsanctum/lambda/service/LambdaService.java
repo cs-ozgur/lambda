@@ -53,11 +53,12 @@ public interface LambdaService {
     String handler = functionConfiguration.getHandler();
     String location = functionCodeLocation.getLocation();
     String name = invokeRequest.getFunctionName();
+    Integer timeout = functionConfiguration.getTimeout();
 
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
       String functionEndpoint = new ContainerService().runContainer(httpClient, bridgeServerEndpoint,
-              handler, location, name, functionConfiguration.getEnvironment().getVariables());
+              handler, location, name, functionConfiguration.getEnvironment().getVariables(), timeout);
 
       if (functionEndpoint == null) {
         return null;

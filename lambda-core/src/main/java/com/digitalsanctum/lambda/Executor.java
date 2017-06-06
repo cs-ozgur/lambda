@@ -89,26 +89,30 @@ public class Executor implements ResultProvider {
         throw new UnsupportedOperationException("Unsupported input object type");
       }
 
-      invoke(inputObj, obj, method);
+      invoke(new FunctionRunnable(this.definition.getContext(), inputObj, obj, method, this));
 
     } else {
       Class cls = Class.forName(this.definition.getHandler());
       final Object obj = cls.newInstance();
 
       if (obj instanceof RequestHandler) {
-        Map<String, Class> handlerTypes = getRequestHandlerTypes(this.definition.getHandler());
+        Class requestClass = getRequestHandlerTypes(this.definition.getHandler()).get("request");
 
-        Class requestClass = handlerTypes.get("request");
-
-        Object inputObj = mapper.readValue(inputJson, requestClass);
-
-        invoke(inputObj, obj, getHandleRequest(cls, requestClass, Context.class));
+        invoke(new FunctionRunnable(
+                this.definition.getContext(),
+                mapper.readValue(inputJson, requestClass),
+                obj,
+                getHandleRequest(cls, requestClass, Context.class),
+                this)
+        );
       } else if (obj instanceof RequestStreamHandler) {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(inputJson.getBytes(StandardCharsets.UTF_8));
-
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        invoke(inputStream, outputStream, obj, getHandleRequest(cls, InputStream.class, OutputStream.class, Context.class));
+        invoke(new FunctionStreamRunnable(
+                this.definition.getContext(),
+                new ByteArrayInputStream(inputJson.getBytes(StandardCharsets.UTF_8)), new ByteArrayOutputStream(),
+                obj,
+                getHandleRequest(cls, InputStream.class, OutputStream.class, Context.class),
+                this)
+        );
       }
     }
 
@@ -129,43 +133,16 @@ public class Executor implements ResultProvider {
     return handleRequest;
   }
 
-  private void invoke(final InputStream inputStream, final ByteArrayOutputStream outputStream, final Object functionInstance, final Method functionMethod) {
-    final Context context = this.definition.getContext();
-    final LambdaLogger logger = context.getLogger();
-    final ExecutorService executor = Executors.newSingleThreadExecutor();
-    final FunctionStreamRunnable functionRunnable = new FunctionStreamRunnable(context, inputStream, outputStream, functionInstance, functionMethod, this);
-    Future future = executor.submit(functionRunnable);
-
-    int timeout = this.definition.getTimeout();
-
-    // start mimic of Amazon Lambda invocation behavior
-    logger.log("START request: " + context.getAwsRequestId());
-    try {
-      future.get(timeout, SECONDS);
-    } catch (TimeoutException e) {
-      future.cancel(true);
-      logger.log("<< TIMED OUT >>");
-      e.printStackTrace();
-    } catch (Exception e) {
-      future.cancel(true);
-      logger.log("<< EXCEPTION >>");
-      e.printStackTrace();
-    } finally {
-      executor.shutdownNow();
-    }
-    logger.log("END request: " + context.getAwsRequestId());
-  }
-
   private static class FunctionStreamRunnable implements Runnable {
     private final LambdaLogger logger;
     private final Context context;
-    private final Object input;
+    private final InputStream input;
     private final ByteArrayOutputStream output;
     private final Object functionInstance;
     private final Method functionMethod;
     private final ResultProvider resultProvider;
 
-    FunctionStreamRunnable(Context context, Object input, ByteArrayOutputStream output, Object functionInstance, Method functionMethod, ResultProvider resultProvider) {
+    FunctionStreamRunnable(Context context, InputStream input, ByteArrayOutputStream output, Object functionInstance, Method functionMethod, ResultProvider resultProvider) {
       this.context = context;
       this.logger = context.getLogger();
       this.input = input;
@@ -179,12 +156,7 @@ public class Executor implements ResultProvider {
     public void run() {
       logger.log(toString());
       try {
-        Object result;
-//        if (functionMethod.getParameterCount() == 2) {
         functionMethod.invoke(functionInstance, input, output, context);
-//        } else {
-//          result = functionMethod.invoke(functionInstance, input);
-//        }
 
         resultProvider.setResult(new DirectResponse(new String(output.toByteArray())));
       } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -301,12 +273,11 @@ public class Executor implements ResultProvider {
     }
   }
 
-  private void invoke(final Object input, final Object functionInstance, final Method functionMethod) {
+  private void invoke(final Runnable runnable) {
     final Context context = this.definition.getContext();
     final LambdaLogger logger = context.getLogger();
     final ExecutorService executor = Executors.newSingleThreadExecutor();
-    final FunctionRunnable functionRunnable = new FunctionRunnable(context, input, functionInstance, functionMethod, this);
-    Future future = executor.submit(functionRunnable);
+    Future future = executor.submit(runnable);
 
     int timeout = this.definition.getTimeout();
 

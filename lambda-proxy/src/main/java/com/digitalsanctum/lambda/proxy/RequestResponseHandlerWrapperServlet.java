@@ -46,12 +46,12 @@ public class RequestResponseHandlerWrapperServlet extends HttpServlet {
     }
 
     try {
-      ResultProvider resultProvider = executor.execute(jb.toString());
-      if (resultProvider.getResult() instanceof DirectResponse) {
-        resp.getWriter().write(((DirectResponse) resultProvider.getResult()).getResponse());
+      Object result = executor.execute(jb.toString()).getResult();
+
+      if (result instanceof DirectResponse) {
+        resp.getWriter().write(((DirectResponse) result).getResponse());
       } else {
-        Object resultObj = resultProvider.getResult();
-        new ObjectMapper().writeValue(resp.getWriter(), resultObj);
+        new ObjectMapper().writeValue(resp.getWriter(), result);
       }
     } catch (Exception e) {
       e.printStackTrace();

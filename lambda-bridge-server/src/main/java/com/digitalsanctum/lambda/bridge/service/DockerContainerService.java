@@ -43,6 +43,7 @@ public class DockerContainerService implements ContainerService {
   private static final Logger log = LoggerFactory.getLogger(DockerContainerService.class);
 
   private static final String CONTAINER_PORT = "8080";
+  private static final String DEBUG_PORT = "5005";
   private static final String HOST_BINDING_IP = "0.0.0.0";
 
   private final DockerClient dockerClient;
@@ -59,7 +60,7 @@ public class DockerContainerService implements ContainerService {
 
     try {
       // Bind container ports to host ports
-      final String[] ports = {CONTAINER_PORT};
+      final String[] ports = {CONTAINER_PORT, DEBUG_PORT};
       final Map<String, List<PortBinding>> portBindings = new HashMap<>();
       for (String port : ports) {
         List<PortBinding> hostPorts = new ArrayList<>();
@@ -67,11 +68,10 @@ public class DockerContainerService implements ContainerService {
         portBindings.put(port, hostPorts);
       }
 
-      // Bind container port 8080 to an automatically allocated available host port.
-      List<PortBinding> randomPort = new ArrayList<>();
-      PortBinding portBinding = PortBinding.randomPort(HOST_BINDING_IP);
-      randomPort.add(portBinding);
-      portBindings.put(CONTAINER_PORT, randomPort);
+      // Bind container ports 8080 & 5005 to an automatically allocated available host port.
+      for (String port : ports) {
+        portBindings.put(port, Collections.singletonList(PortBinding.randomPort(HOST_BINDING_IP)));
+      }
 
       final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
 

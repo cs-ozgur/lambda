@@ -47,7 +47,7 @@ public class SimpleContext implements Context {
     }
 
     public ClientContext getClientContext() {
-        throw new UnsupportedOperationException();
+        return new SimpleClientContext();
     }
 
     public int getRemainingTimeInMillis() {

@@ -93,9 +93,13 @@ public class FunctionResource {
     /**
      * Add environment variables.
      */
-    fc.setEnvironment(new EnvironmentResponse().withVariables(request.getEnvironment().getVariables()));
+    if (request.getEnvironment() != null) {
+      fc.setEnvironment(new EnvironmentResponse().withVariables(request.getEnvironment().getVariables()));
+    }
 
-    fc.setTimeout(request.getTimeout());
+    if (request.getTimeout() != null) {
+      fc.setTimeout(request.getTimeout());
+    }
 
     // save lambda jar to tmp dir and persist the path
     if (request.getCode() != null) {
@@ -163,6 +167,8 @@ public class FunctionResource {
 
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
+
+    updateFunctionConfigurationRequest.setFunctionName(functionName);
 
     UpdateFunctionConfigurationResult updateFunctionConfigurationResult
         = lambdaService.updateFunctionConfiguration(updateFunctionConfigurationRequest);

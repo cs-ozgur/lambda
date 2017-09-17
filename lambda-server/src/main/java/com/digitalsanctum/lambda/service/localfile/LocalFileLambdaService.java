@@ -1,15 +1,6 @@
 package com.digitalsanctum.lambda.service.localfile;
 
-import com.amazonaws.services.lambda.model.CreateFunctionResult;
-import com.amazonaws.services.lambda.model.FunctionCode;
-import com.amazonaws.services.lambda.model.FunctionCodeLocation;
-import com.amazonaws.services.lambda.model.FunctionConfiguration;
-import com.amazonaws.services.lambda.model.GetFunctionResult;
-import com.amazonaws.services.lambda.model.ListFunctionsResult;
-import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
-import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
-import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
-import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
+import com.amazonaws.services.lambda.model.*;
 import com.digitalsanctum.lambda.model.CreateImageRequest;
 import com.digitalsanctum.lambda.model.CreateImageResponse;
 import com.digitalsanctum.lambda.model.DeleteContainerResponse;
@@ -115,6 +106,17 @@ public class LocalFileLambdaService implements LambdaService {
     fc.setRuntime(request.getRuntime());
     fc.setDescription(request.getDescription());
     fc.setMemorySize(request.getMemorySize());
+
+    /**
+     * Add environment variables.
+     */
+    if (request.getEnvironment() != null) {
+      fc.setEnvironment(new EnvironmentResponse().withVariables(request.getEnvironment().getVariables()));
+    }
+
+    if (request.getTimeout() != null) {
+      fc.setTimeout(request.getTimeout());
+    }
 
     Path path = Paths.get(ROOT_DIR.toString(), fc.getFunctionName() + CONFIG_SUFFIX);
     localFileSystemService.write(path, fc);

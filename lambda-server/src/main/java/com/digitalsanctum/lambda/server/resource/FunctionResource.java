@@ -86,17 +86,9 @@ public class FunctionResource {
 
     FunctionConfiguration fc = new FunctionConfiguration();
     fc.setFunctionName(request.getFunctionName());
+    fc.setHandler(extractHandlerClass(request.getHandler()));
     fc.setFunctionArn(ArnUtils.functionArn(request.getFunctionName()));
     fc.setRuntime(request.getRuntime());
-
-    {
-      String handler = request.getHandler();
-      if (handler.endsWith("::handleRequest")) {
-        handler = handler.substring(0, handler.indexOf("::"));
-      }
-
-      fc.setHandler(handler);
-    }
 
     /**
      * Add environment variables.
@@ -111,7 +103,6 @@ public class FunctionResource {
 
     // save lambda jar to tmp dir and persist the path
     if (request.getCode() != null) {
-
       log.info("updating function code");
 
       FunctionCode code = request.getCode();
@@ -176,15 +167,7 @@ public class FunctionResource {
     verifyFunctionExists(functionName, getFunctionResult);
 
     updateFunctionConfigurationRequest.setFunctionName(functionName);
-
-    {
-      String handler = updateFunctionConfigurationRequest.getHandler();
-      if (handler.endsWith("::handleRequest")) {
-        handler = handler.substring(0, handler.indexOf("::"));
-      }
-
-      updateFunctionConfigurationRequest.setHandler(handler);
-    }
+    updateFunctionConfigurationRequest.setHandler(extractHandlerClass(updateFunctionConfigurationRequest.getHandler()));
 
     UpdateFunctionConfigurationResult updateFunctionConfigurationResult
         = lambdaService.updateFunctionConfiguration(updateFunctionConfigurationRequest);
@@ -194,6 +177,12 @@ public class FunctionResource {
         .header(X_AMZN_REQUEST_ID_HEADER, randomUUID().toString())
         .entity(updateFunctionConfigurationResult)
         .build();
+  }
+
+  private String extractHandlerClass(String originalHandler) {
+    return originalHandler.endsWith("::handleRequest")
+            ? originalHandler.substring(0, originalHandler.indexOf("::"))
+            : originalHandler;
   }
 
 

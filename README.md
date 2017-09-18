@@ -87,7 +87,7 @@ By default, AWS Lambda API endpoints are available at `http://localhost:8080`
 
 From the command line:
 
-    java -jar lambda-lifecycle/target/lambda-lifecycle-1.7.jar
+    java -jar lambda-lifecycle/target/lambda-lifecycle-1.8.jar
     
 From Java code:
     

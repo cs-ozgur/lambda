@@ -50,7 +50,7 @@ public class Executor implements ResultProvider {
 
     log.info("inputJson: {}", inputJson);
 
-    if (this.definition.getHandler().contains("::")) {
+    if (!this.definition.getHandler().endsWith("handleRequest") && this.definition.getHandler().contains("::")) {
 
       Class cls = Class.forName(this.definition.getHandlerClass());
       Method[] declaredMethods = cls.getDeclaredMethods();

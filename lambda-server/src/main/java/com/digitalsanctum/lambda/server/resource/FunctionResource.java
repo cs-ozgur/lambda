@@ -88,7 +88,15 @@ public class FunctionResource {
     fc.setFunctionName(request.getFunctionName());
     fc.setFunctionArn(ArnUtils.functionArn(request.getFunctionName()));
     fc.setRuntime(request.getRuntime());
-    fc.setHandler(request.getHandler());
+
+    {
+      String handler = request.getHandler();
+      if (handler.endsWith("::handleRequest")) {
+        handler = handler.substring(0, handler.indexOf("::"));
+      }
+
+      fc.setHandler(handler);
+    }
 
     /**
      * Add environment variables.
@@ -164,11 +172,19 @@ public class FunctionResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateFunctionConfiguration(UpdateFunctionConfigurationRequest updateFunctionConfigurationRequest,
                                               @PathParam("functionName") String functionName) {
-
     GetFunctionResult getFunctionResult = lambdaService.getFunction(functionName);
     verifyFunctionExists(functionName, getFunctionResult);
 
     updateFunctionConfigurationRequest.setFunctionName(functionName);
+
+    {
+      String handler = updateFunctionConfigurationRequest.getHandler();
+      if (handler.endsWith("::handleRequest")) {
+        handler = handler.substring(0, handler.indexOf("::"));
+      }
+
+      updateFunctionConfigurationRequest.setHandler(handler);
+    }
 
     UpdateFunctionConfigurationResult updateFunctionConfigurationResult
         = lambdaService.updateFunctionConfiguration(updateFunctionConfigurationRequest);

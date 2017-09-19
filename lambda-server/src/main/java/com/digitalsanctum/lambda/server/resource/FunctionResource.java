@@ -181,7 +181,7 @@ public class FunctionResource {
 
   private String extractHandlerClass(String originalHandler) {
     return originalHandler.endsWith("::handleRequest")
-            ? originalHandler.substring(0, originalHandler.indexOf("::"))
+            ? originalHandler.split("::")[0]
             : originalHandler;
   }
 

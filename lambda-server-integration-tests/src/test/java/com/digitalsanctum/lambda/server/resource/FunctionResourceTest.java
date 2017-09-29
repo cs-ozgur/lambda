@@ -54,7 +54,7 @@ public class FunctionResourceTest {
 
   private static final ObjectMapper mapper = new ObjectMapper();
 
-  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8080";
+  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8081";
 
   private static final String TEST_FUNCTION_NAME = "concat";
   static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";

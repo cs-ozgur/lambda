@@ -60,7 +60,7 @@ public class EventSourceMappingResourceTest {
   private static final String FUNCTION_HANDLER = "com.digitalsanctum.lambda.functions.event.dynamodb.BasicDynamoDb::handler";
   private static final long RCU = 1L, WCU = 1L;
 
-  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8080";
+  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8081";
 
   private static AWSLocal awsLocal;
 

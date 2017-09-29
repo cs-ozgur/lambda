@@ -23,7 +23,7 @@ public class DockerHostUserDataProvider implements UserDataProvider {
                 .append(String.format("docker login --email=%s --username=%s --password=%s",
                         dockerConfig.getEmail(), dockerConfig.getUsername(), dockerConfig.getPassword())).append("\n")
                 .append(String.format("docker pull %s", imageName)).append("\n")
-                .append(String.format("docker run -d -e \"LAMBDA_TIMEOUT=%s\" -e \"LAMBDA_HANDLER=%s\" -p %s:8080 %s",
+                .append(String.format("docker run -d -e \"LAMBDA_TIMEOUT=%s\" -e \"LAMBDA_HANDLER=%s\" -p %s:8081 %s",
                         timeout, handler, port, imageName));
         return sb.toString();
     }

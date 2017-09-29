@@ -42,7 +42,7 @@ public class DockerContainerService implements ContainerService {
 
   private static final Logger log = LoggerFactory.getLogger(DockerContainerService.class);
 
-  private static final String CONTAINER_PORT = "8080";
+  private static final String CONTAINER_PORT = "8081";
   private static final String DEBUG_PORT = "5005";
   private static final String HOST_BINDING_IP = "0.0.0.0";
 
@@ -68,7 +68,7 @@ public class DockerContainerService implements ContainerService {
         portBindings.put(port, hostPorts);
       }
 
-      // Bind container ports 8080 & 5005 to an automatically allocated available host port.
+      // Bind container ports 8081 & 5005 to an automatically allocated available host port.
       for (String port : ports) {
         portBindings.put(port, Collections.singletonList(PortBinding.randomPort(HOST_BINDING_IP)));
       }

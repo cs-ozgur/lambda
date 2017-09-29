@@ -60,7 +60,7 @@ public class BasicKinesisIntegrationTest {
   private static final String FUNCTION_HANDLER = "com.digitalsanctum.lambda.functions.event.kinesis.BasicKinesis::handler";
   private static final String FUNCTION_ARN = "arn:aws:lambda:local:111111111111:function:" + FUNCTION_NAME;
 
-  private static final int LAMBDA_SERVER_PORT = 8080;
+  private static final int LAMBDA_SERVER_PORT = 8081;
 
   protected static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:" + LAMBDA_SERVER_PORT;
   protected static final String TEST_STREAM = "test-stream";

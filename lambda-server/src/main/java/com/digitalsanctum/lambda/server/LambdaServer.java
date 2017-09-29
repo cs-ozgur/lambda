@@ -135,7 +135,7 @@ public class LambdaServer {
 
   public static void main(String[] args) throws Exception {
     
-    int port = 8080;
+    int port = 8081;
     if (args != null && args.length == 1) {
       port = Integer.parseInt(args[0]);
     }

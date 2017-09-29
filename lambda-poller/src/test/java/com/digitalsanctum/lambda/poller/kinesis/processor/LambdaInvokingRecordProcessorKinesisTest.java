@@ -53,7 +53,7 @@ public class LambdaInvokingRecordProcessorKinesisTest {
   private static final Logger log = LoggerFactory.getLogger(LambdaInvokingRecordProcessorKinesisTest.class);
 
   private static final String TEST_STREAM = "test-stream";
-  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8080";
+  private static final String LAMBDA_SERVER_ENDPOINT = "http://localhost:8081";
   private static final String FUNCTION_NAME = "basickinesis";
   private static final String FUNCTION_HANDLER = "com.digitalsanctum.lambda.functions.event.kinesis.BasicKinesis::handler";
   static final String TEST_LAMBDA_JAR = "/test-functions/lambda.jar";

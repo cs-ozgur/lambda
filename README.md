@@ -72,7 +72,7 @@ The following will start the Lambda server and supporting infrastructure:
 
     // instantiate Lambda client to point to local Lambda API server
     AwsClientBuilder.EndpointConfiguration endpointConfiguration
-        = new AwsClientBuilder.EndpointConfiguration("http://localhost:8080", awsLocal.getSigningRegion());
+        = new AwsClientBuilder.EndpointConfiguration("http://localhost:8081", awsLocal.getSigningRegion());
     awsLambda = AWSLambdaClientBuilder.standard().withEndpointConfiguration(endpointConfiguration).build();
 
     // do some work
@@ -80,7 +80,7 @@ The following will start the Lambda server and supporting infrastructure:
     awsLocal.stop();
 
 
-By default, AWS Lambda API endpoints are available at `http://localhost:8080`
+By default, AWS Lambda API endpoints are available at `http://localhost:8081`
 
 
 ## Usage
@@ -101,7 +101,7 @@ From Java code:
     
 List functions:
     
-    aws lambda list-functions --profile local --endpoint-url http://localhost:8080
+    aws lambda list-functions --profile local --endpoint-url http://localhost:8081
        
 Create a function:       
        
@@ -114,15 +114,15 @@ Create a function:
        --description "test1 description" \
        --timeout 30 \
        --memory-size 512 \
-       --endpoint-url http://localhost:8080
+       --endpoint-url http://localhost:8081
                   
 Get a function:       
     
-    aws lambda get-function --function-name test1 --endpoint-url http://localhost:8080    
+    aws lambda get-function --function-name test1 --endpoint-url http://localhost:8081
     
 Invoke a function:    
     
-    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output.json    
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8081 output.json
                 
 Update code for a function (update `com.digitalsanctum.lambda.functions.requestresponse.Concat`, cd lambda-functions):
 
@@ -134,22 +134,22 @@ change applied to the Lambda function:
     
     aws lambda update-function-code --function-name test1 \
         --zip-file fileb://lambda-server-integration-tests/src/test/resources/test-functions/lambda.jar \
-        --endpoint-url http://localhost:8080
+        --endpoint-url http://localhost:8081
                     
-    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8080 output2.json                    
+    aws lambda invoke --function-name test1 --payload "{\"firstName\":\"shane\",\"lastName\":\"witbeck\"}" --endpoint-url http://localhost:8081 output2.json
     
 Delete a function:
 
-    aws lambda delete-function --function-name test1 --profile local --endpoint-url http://localhost:8080
+    aws lambda delete-function --function-name test1 --profile local --endpoint-url http://localhost:8081
     
 Confirm the deletion by listing functions again:
 
-    aws lambda list-functions --profile local --endpoint-url http://localhost:8080   
+    aws lambda list-functions --profile local --endpoint-url http://localhost:8081
     
     
 List event source mappings:
     
-    aws lambda list-event-source-mappings --endpoint-url http://localhost:8080
+    aws lambda list-event-source-mappings --endpoint-url http://localhost:8081
     
     
 Create an event source mapping:
@@ -157,7 +157,7 @@ Create an event source mapping:
     aws lambda create-event-source-mapping --event-source-arn arn:aws:kinesis:local:111111111111:stream/foo \
         --function-name test1 \
         --starting-position TRIM_HORIZON \
-        --endpoint-url http://localhost:8080
+        --endpoint-url http://localhost:8081
     
     
 ### AWS Java SDK
@@ -165,7 +165,7 @@ Create an event source mapping:
 Instantiating an AWS Lambda client to work with local functions:    
     
     AwsClientBuilder.EndpointConfiguration endpointConfiguration 
-            = new AwsClientBuilder.EndpointConfiguration("http://localhost:8080", "local");
+            = new AwsClientBuilder.EndpointConfiguration("http://localhost:8081", "local");
             
     AWSLambda awsLambda = AWSLambdaClientBuilder.standard()
         .withEndpointConfiguration(endpointConfiguration)

@@ -5,11 +5,11 @@
     <parent>
         <artifactId>lambda</artifactId>
         <groupId>com.digitalsanctum.lambda</groupId>
-        <version>1.10</version>
+        <version>1.11</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.digitalsanctum.lambda.model</groupId>
     <artifactId>lambda-model</artifactId>
     <name>Model</name>
-    <version>1.10</version>
+    <version>1.11</version>
 </project>
